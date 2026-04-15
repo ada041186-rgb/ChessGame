@@ -9,7 +9,7 @@
         xmlns:views="clr-namespace:ChessGame.View.UserControls"
         
         mc:Ignorable="d"
-        Title="ChessGame"
+        Title="ChessGame" Icon="/Assets/icon.ico"
         MinWidth="640" MinHeight="480">
 
     <Window.Resources>
@@ -18,6 +18,9 @@
         </DataTemplate>
         <DataTemplate DataType="{x:Type viewmodels:SearchGameViewModel}">
             <views:SearchGameView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type viewmodels:GameViewModel}">
+            <views:GameView />
         </DataTemplate>
     </Window.Resources>
 

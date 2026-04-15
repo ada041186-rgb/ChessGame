@@ -8,7 +8,7 @@ namespace ChessGame.ViewModel
 {
     public class MainViewModel : BaseViewModel
     {
-        private static MainViewModel? _instance;
+        private static MainViewModel _instance;
         public static MainViewModel Instance => _instance ??= new MainViewModel();
 
         private BaseViewModel _currentView = new MenuViewModel();

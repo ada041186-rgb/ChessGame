@@ -24,15 +24,15 @@ namespace ChessGame.ViewModel
 
 
 
-        public void CreateGame(object? parameter)
+        public void CreateGame(object parameter)
         {
-
+            MainViewModel.Instance.CurrentView = new GameViewModel();
         }
-        public void SearchGame(object? parameter)
+        public void SearchGame(object parameter)
         {
             MainViewModel.Instance.CurrentView = new SearchGameViewModel();
         }
-        public void Exit(object? parameter)
+        public void Exit(object parameter)
         {
             Application.Current.Shutdown();
         }

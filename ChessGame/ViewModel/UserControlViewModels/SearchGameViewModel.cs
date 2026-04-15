@@ -10,20 +10,20 @@ namespace ChessGame.ViewModel
 {
     public class SearchGameViewModel : BaseViewModel
     {
-        public ICommand SearchCommand { get; }
+        public ICommand JoinCommand { get; }
         public ICommand MenuCommand { get; }
 
         public SearchGameViewModel()
         {
-            SearchCommand = new RelayCommand(SearchGame);
+            JoinCommand = new RelayCommand(SearchGame);
             MenuCommand = new RelayCommand(ReturnToMenu);
         }
-        public void SearchGame(object? parameter)
+        public void SearchGame(object parameter)
         {
             // Process of searching game
         }
 
-        public void ReturnToMenu(object? parameter)
+        public void ReturnToMenu(object parameter)
         {
             MainViewModel.Instance.CurrentView = new MenuViewModel();
         }
