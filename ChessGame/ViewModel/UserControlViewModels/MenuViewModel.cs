@@ -22,17 +22,15 @@ namespace ChessGame.ViewModel
             ExitCommand = new RelayCommand(Exit);
         }
 
-
-
-        public void CreateGame(object parameter)
+        public void CreateGame(object obj)
         {
             MainViewModel.Instance.CurrentView = new GameViewModel();
         }
-        public void SearchGame(object parameter)
+        public void SearchGame(object obj)
         {
             MainViewModel.Instance.CurrentView = new SearchGameViewModel();
         }
-        public void Exit(object parameter)
+        public void Exit(object obj)
         {
             Application.Current.Shutdown();
         }

@@ -4,20 +4,20 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using System.Windows.Controls;
 using System.Windows.Media;
+using System.Windows.Shapes;
 
-namespace ChessGame.ViewModel
+namespace ChessGame.ViewModel.Game
 {
-    public class CellViewModel : BaseViewModel
+    public class HighlightViewModel : BaseViewModel
     {
-        private ImageSource _imagePath;
-        public ImageSource ImagePath
+        private Brush _brush = Brushes.Transparent;
+        public Brush Brush
         {
-            get => _imagePath;
+            get => _brush;
             set
             {
-                _imagePath = value;
+                _brush = value;
                 NotifyPropertyChanged();
             }
         }
