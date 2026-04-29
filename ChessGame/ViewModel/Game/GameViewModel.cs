@@ -4,6 +4,7 @@ using ChessGame.Model.Moves;
 using ChessGame.Services.Implementations;
 using ChessGame.Services.Interfaces;
 using ChessGame.ViewModel.Game;
+using Microsoft.Extensions.DependencyInjection;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -18,7 +19,7 @@ using System.Windows.Media;
 
 namespace ChessGame.ViewModel
 {
-    public class GameViewModel : BaseViewModel
+    public class GameViewModel : BaseViewModel, IDisposable
     {
         protected readonly Dictionary<Position, Move> moveCache = new Dictionary<Position, Move>();
         public CellsViewModel CellsViewModel { get; set; }
@@ -36,12 +37,14 @@ namespace ChessGame.ViewModel
         }
         private readonly IGameService _gameService;
         private readonly INetworkService _networkService;
+        private readonly INavigationService _navigationService;
 
         public ICommand CellClickCommand { get; }
-        public GameViewModel(IGameService gameService, INetworkService networkService)
+        public GameViewModel(IGameService gameService, INetworkService networkService, INavigationService navigationService)
         {
             _gameService = gameService;
             _networkService = networkService;
+            _navigationService = navigationService;
 
             InitializeBoard();
 
@@ -49,10 +52,23 @@ namespace ChessGame.ViewModel
 
             _gameService.BoardChanged += OnBoardUpdated;
             _gameService.MoveExecuted += OnMoveExecuted;
+            _gameService.GameOver += OnGameOver;
 
             IsFlipped();
             OnBoardUpdated();
         }
+
+        private void OnGameOver(GameResult result)
+        {
+            var app = (App)Application.Current;
+            var serviceProvider = app.ServiceProvider;
+            var endGameVM = serviceProvider.GetRequiredService<EndResultViewModel>();
+
+            endGameVM.Initialize(result);
+
+            _navigationService.NavigateTo(endGameVM);
+        }
+
         private void OnMoveExecuted(Move move)
         {
             if (_gameService.IsCurrentPlayer())
@@ -140,6 +156,13 @@ namespace ChessGame.ViewModel
             {
                 _gameService.TryMakeMove(move);
             }
+        }
+
+        public void Dispose()
+        {
+            _gameService.BoardChanged -= OnBoardUpdated;
+            _gameService.MoveExecuted -= OnMoveExecuted;
+            _gameService.GameOver -= OnGameOver;
         }
     }
 }

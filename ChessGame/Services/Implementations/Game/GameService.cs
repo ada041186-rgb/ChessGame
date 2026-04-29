@@ -1,4 +1,5 @@
 ﻿using ChessGame.Model;
+using ChessGame.Model.Enums;
 using ChessGame.Model.Moves;
 using ChessGame.Services.Interfaces;
 using ChessGame.Services.Interfaces.Utils;
@@ -10,18 +11,25 @@ namespace ChessGame.Services
         private IGameState _state;
         private readonly IGameStateFactory _stateFactory;
         private readonly IChessRulesService _rules;
+        private readonly IGameHistoryService _history;
+        private readonly IEndGameRulePipeline _endGamePipeline;
 
         public Player ThisPlayer => _state.ThisPlayer;
 
         public event Action BoardChanged;
         public event Action PlayerChanged;
         public event Action<Move> MoveExecuted;
+        public event Action<GameResult> GameOver;
 
-        public GameService(IGameStateFactory stateFactory, IChessRulesService rules)
+        public GameService(
+            IGameStateFactory stateFactory, IChessRulesService rules,
+            IGameHistoryService history, IEndGameRulePipeline endGameRulePipeline)
         {
             _stateFactory = stateFactory;
             _rules = rules;
             _state = _stateFactory.Create(Player.None);
+            _history = history;
+            _endGamePipeline = endGameRulePipeline;
         }
 
         public void InitGame(Player player)
@@ -50,10 +58,31 @@ namespace ChessGame.Services
             move.Execute(_state.Board);
             MoveExecuted?.Invoke(move);
 
-            _state.CurrentPlayer = _state.CurrentPlayer.Opponent();
-            RaiseEvents();
+            var nextPlayer = _state.CurrentPlayer.Opponent();
+            _state.CurrentPlayer = nextPlayer;
 
+            CheckGameEndConditions(nextPlayer);
+
+            var snapshot = _state.SaveState();
+            _history.AddSnapshot(snapshot);
+
+            RaiseEvents();
             return true;
+        }
+
+        private void CheckGameEndConditions(Player nextPlayer)
+        {
+            var result = _endGamePipeline.Evaluate(
+                _state.Board,
+                nextPlayer,
+                _history.GetHistory()
+            );
+
+            if (result != null)
+            {
+                _history.Clear();
+                GameOver?.Invoke(result);
+            }
         }
 
         public IEnumerable<Move> GetLegalMoves(Position pos)

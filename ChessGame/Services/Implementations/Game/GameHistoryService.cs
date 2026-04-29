@@ -18,7 +18,7 @@ namespace ChessGame.Services.Implementations.Game
             _history.Add(memento);
         }
 
-        public GameStateMemento UndoMove()
+        public GameStateMemento Undo()
         {
             if (_history.Count > 1)
             {
@@ -28,31 +28,14 @@ namespace ChessGame.Services.Implementations.Game
             return null;
         }
 
-        public bool IsThreefoldRepetition()
+        public IEnumerable<GameStateMemento> GetHistory()
         {
-            if (_history.Count < 8) return false;
-
-            string currentHash = _history.Last().PositionHash;
-            int count = _history.Count(m => m.PositionHash == currentHash);
-
-            return count >= 3;
+            return _history.AsReadOnly();
         }
 
-        public string ExportMatchData()
-        {
-            return JsonSerializer.Serialize(_history);
-        }
-
-        public void ImportMatchData(string jsonData)
+        public void Clear()
         {
             _history.Clear();
-            var importedHistory = JsonSerializer.Deserialize<List<GameStateMemento>>(jsonData);
-            if (importedHistory != null)
-            {
-                _history.AddRange(importedHistory);
-            }
         }
-
-        public GameStateMemento GetCurrentState() => _history.LastOrDefault();
     }
 }

@@ -18,7 +18,17 @@ namespace ChessGame.Services
             var candidates = piece.GetMoves(pos, board);
             return candidates.Where(m => IsMoveLegal(board, m));
         }
-
+        public bool HasAnyLegalMoves(Board board, Player player)
+        {
+            foreach (var pos in board.PiecePositionsFor(player))
+            {
+                if (GetLegalMoves(board, player, pos).Any())
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
         public bool IsMoveLegal(Board board, Move move)
         {
             var piece = board[move.FromPos];

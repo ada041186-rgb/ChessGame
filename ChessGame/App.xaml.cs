@@ -2,6 +2,7 @@
 using ChessGame.Model.DTO.Handlers;
 using ChessGame.Model.DTO.Messages;
 using ChessGame.Model.Moves;
+using ChessGame.Model.Rules;
 using ChessGame.Services;
 using ChessGame.Services.Implementations;
 using ChessGame.Services.Implementations.Game;
@@ -9,6 +10,7 @@ using ChessGame.Services.Implementations.Utils;
 using ChessGame.Services.Interfaces;
 using ChessGame.Services.Interfaces.Utils;
 using ChessGame.ViewModel;
+using ChessGame.ViewModel.Game;
 using Microsoft.Extensions.DependencyInjection;
 using System.Windows;
 
@@ -32,6 +34,13 @@ namespace ChessGame
             services.AddSingleton<IBoardFactory, BoardFactory>();
             services.AddSingleton<IGameStateFactory, GameStateFactory>();
 
+            services.AddSingleton<IEndGameRulePipeline, EndGameRulePipeline>();
+
+            services.AddTransient<IEndGameRule, CheckmateRule>();
+            services.AddTransient<IEndGameRule, StalemateRule>();
+            services.AddTransient<IEndGameRule, RepetitionRule>();
+            services.AddTransient<IEndGameRule, InsufficientMaterial>();
+
             services.AddSingleton<ILobbyService, LobbyService>();
             services.AddSingleton<IGameService, GameService>();
             services.AddSingleton<IChessRulesService, ChessRulesService>();
@@ -42,7 +51,7 @@ namespace ChessGame
 
             services.AddTransient<MainViewModel>();
             services.AddTransient<MenuViewModel>();
-
+            services.AddTransient<EndResultViewModel>();
             services.AddTransient<SearchGameViewModel>();
             services.AddTransient<LobbyViewModel>();
 

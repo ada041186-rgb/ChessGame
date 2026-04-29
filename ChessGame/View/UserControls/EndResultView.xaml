@@ -1,0 +1,48 @@
+﻿<UserControl x:Class="ChessGame.View.UserControls.EndResultView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:ChessGame.View.UserControls"
+             mc:Ignorable="d" 
+Width="720" Height="360">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="3*"/>
+            <ColumnDefinition Width="4*"/>
+            <ColumnDefinition Width="3*"/>
+        </Grid.ColumnDefinitions>
+
+        <Grid Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="2*"/>
+                <RowDefinition Height="1*"/>
+                <RowDefinition Height="1*"/>
+                <RowDefinition Height="1*"/>
+                <RowDefinition Height="2*"/>
+            </Grid.RowDefinitions>
+
+            <TextBlock Grid.Row="1" 
+                       Text="{Binding TitleText}" 
+                       FontSize="32" 
+                       FontWeight="Bold" 
+                       Foreground="White"
+                       HorizontalAlignment="Center" 
+                       VerticalAlignment="Center"/>
+
+            <TextBlock Grid.Row="2" 
+                       Text="{Binding ReasonText}" 
+                       FontSize="20" 
+                       Foreground="LightGray"
+                       HorizontalAlignment="Center" 
+                       VerticalAlignment="Top"/>
+
+            <Button Grid.Row="3" 
+                    Style="{StaticResource ButtonStyle}" 
+                    Margin="0,10" 
+                    Command="{Binding BackToMenuCommand}"
+                    Content="В головне меню">
+            </Button>
+        </Grid>
+    </Grid>
+</UserControl>

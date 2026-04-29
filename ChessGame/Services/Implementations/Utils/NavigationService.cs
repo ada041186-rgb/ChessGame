@@ -19,11 +19,13 @@ namespace ChessGame.Services
             get => _currentView;
             private set
             {
-                if (_currentView != value)
+                if (_currentView is IDisposable disposableViewModel)
                 {
-                    _currentView = value;
-                    NotifyPropertyChanged();
+                    disposableViewModel.Dispose();
                 }
+
+                _currentView = value;
+                NotifyPropertyChanged();
             }
         }
 

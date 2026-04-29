@@ -1,4 +1,7 @@
-﻿using System;
+﻿using ChessGame.Model.Abstractions;
+using ChessGame.Model.Interfaces;
+using ChessGame.Services;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
@@ -7,9 +10,14 @@ using System.Threading.Tasks;
 
 namespace ChessGame.Model
 {
-    public class Board
+    public class Board : IBoard
     {
         private readonly Piece[,] pieces = new Piece[8,8];
+        private readonly IPieceCounterStrategy _pieceCounter;
+        public Board(IPieceCounterStrategy pieceCounter = null)
+        {
+            _pieceCounter = pieceCounter ?? new StandardPieceCounter();
+        }
 
         public Piece this[int row, int col]
         {
@@ -94,6 +102,10 @@ namespace ChessGame.Model
                 }
             }
             return sb.ToString();
+        }
+        public ICountringPieces CountPieces()
+        {
+            return _pieceCounter.Count(this);
         }
     }
 }
