@@ -1,0 +1,48 @@
+﻿<UserControl x:Class="ChessGame.View.UserControls.PawnPromotionView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:ChessGame.View.UserControls"
+             mc:Ignorable="d" 
+             d:DesignHeight="120" d:DesignWidth="400">
+
+    <Border Style="{StaticResource BorderStyle}">
+        <Grid>
+        <ItemsControl ItemsSource="{Binding PromotionOptions}">
+            <ItemsControl.ItemsPanel>
+                <ItemsPanelTemplate>
+                    <UniformGrid Rows="1" Columns="4"/>
+                </ItemsPanelTemplate>
+            </ItemsControl.ItemsPanel>
+
+            <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                    <Button Command="{Binding DataContext.PromoteCommand, RelativeSource={RelativeSource AncestorType=UserControl}}"
+                            CommandParameter="{Binding Type}"
+                            Background="White"
+                            Margin="5"
+                            Padding="5"
+                            Cursor="Hand">
+                        <Button.Template>
+                            <ControlTemplate TargetType="Button">
+                                <Border Background="{TemplateBinding Background}" 
+                                        CornerRadius="5" 
+                                        BorderBrush="Gray" 
+                                        BorderThickness="1">
+                                    <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                </Border>
+                            </ControlTemplate>
+                        </Button.Template>
+
+                        <Image Source="{Binding Image}" 
+                               Width="60" 
+                               Height="60" 
+                               Stretch="Uniform"/>
+                    </Button>
+                </DataTemplate>
+            </ItemsControl.ItemTemplate>
+        </ItemsControl>
+    </Grid>
+    </Border>
+</UserControl>

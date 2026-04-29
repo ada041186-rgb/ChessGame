@@ -1,14 +1,19 @@
 ﻿using ChessGame.Model;
+using ChessGame.Model.Abstractions;
 using ChessGame.Model.DTO.Handlers;
 using ChessGame.Model.DTO.Messages;
 using ChessGame.Model.Moves;
+using ChessGame.Model.PromotionStrategies;
 using ChessGame.Model.Rules;
 using ChessGame.Services;
 using ChessGame.Services.Implementations;
 using ChessGame.Services.Implementations.Game;
+using ChessGame.Services.Implementations.Network;
 using ChessGame.Services.Implementations.Utils;
+using ChessGame.Services.Implementations.Utils.PieceFactories;
 using ChessGame.Services.Interfaces;
 using ChessGame.Services.Interfaces.Utils;
+using ChessGame.Services.Interfaces.Utils.PieceFactories;
 using ChessGame.ViewModel;
 using ChessGame.ViewModel.Game;
 using Microsoft.Extensions.DependencyInjection;
@@ -33,9 +38,12 @@ namespace ChessGame
             services.AddSingleton<IDtoResolver, DtoResolver>();
             services.AddSingleton<IMessageDispatcher, MessageDispatcher>();
 
-            services.AddSingleton<IDtoMoveFactory, DtoMoveFactory>();
             services.AddSingleton<IBoardFactory, BoardFactory>();
             services.AddSingleton<IGameStateFactory, GameStateFactory>();
+            services.AddSingleton<IMoveFactory, MoveFactory>();
+
+            services.AddSingleton<IPieceFactory, PieceFactory>();
+            services.AddTransient<ISubPieceFactory, PawnFactory>();
 
             services.AddSingleton<IEndGameRulePipeline, EndGameRulePipeline>();
 
@@ -44,12 +52,17 @@ namespace ChessGame
             services.AddTransient<IEndGameRule, RepetitionRule>();
             services.AddTransient<IEndGameRule, InsufficientMaterial>();
 
+
+            services.AddTransient<IPromotionStrategy, PromoteToKnightStrategy>();
+            services.AddTransient<IPromotionStrategy, PromoteToBishopStrategy>();
+            services.AddTransient<IPromotionStrategy, PromoteToQueenStrategy>();
+            services.AddTransient<IPromotionStrategy, PromoteToRookStrategy>();
+
             services.AddSingleton<ILobbyService, LobbyService>();
             services.AddSingleton<IGameService, GameService>();
             services.AddSingleton<IChessRulesService, ChessRulesService>();
             services.AddSingleton<IGameHistoryService, GameHistoryService>();
 
-            services.AddTransient<IMessageHandler<DtoMove>, MoveHandler>();
             services.AddTransient<IMessageHandler<DtoStartGame>, StartGameHandler>();
 
             services.AddTransient<MainViewModel>();
@@ -60,6 +73,14 @@ namespace ChessGame
             services.AddTransient<SettingsViewModel>();
 
             services.AddTransient<GameViewModel>();
+
+
+            services.AddTransient<IMessageHandler<DtoNormalMove>, NormalMoveHandler>();
+            services.AddTransient<IMessageHandler<DtoPromotionMove>, PromotionMoveHandler>();
+
+            services.AddTransient<ISpecificDtoMoveFactory, DtoNormalMoveFactory>();
+            services.AddTransient<ISpecificDtoMoveFactory, DtoPromotionMoveFactory>();
+            services.AddTransient<IDtoMoveFactory, DtoMoveDispatcher>();
 
             ServiceProvider = services.BuildServiceProvider();
         }

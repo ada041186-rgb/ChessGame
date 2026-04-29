@@ -7,6 +7,5 @@
         public abstract Position ToPos { get; }
 
         public abstract void Execute(IBoard board);
-        public abstract void Undo(IBoard board);
     }
 }

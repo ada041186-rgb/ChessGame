@@ -28,7 +28,7 @@ namespace ChessGame.Model
             set { pieces[pos.Row, pos.Column] = value; }
         }
 
-        public static bool IsInside(Position pos)
+        public bool IsInside(Position pos)
         {
             return pos.Row >= 0 && pos.Row < 8 && pos.Column >= 0 && pos.Column < 8;
         }

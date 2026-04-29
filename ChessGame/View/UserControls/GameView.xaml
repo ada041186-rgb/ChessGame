@@ -4,7 +4,7 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
              xmlns:local="clr-namespace:ChessGame.View.UserControls"
-             xmlns:project="clr-namespace:ChessGame"
+             xmlns:vm="clr-namespace:ChessGame.ViewModel.Game" xmlns:project="clr-namespace:ChessGame"
              mc:Ignorable="d" 
              Width="600"
              Background="{StaticResource BackgroundColor}">
@@ -68,6 +68,20 @@
             </ItemsControl>
 
             <ContentControl Visibility="Collapsed" Content="{StaticResource ProxyElement}"/>
+
+            <ContentControl Content="{Binding PromotionViewModel}" 
+                            HorizontalAlignment="Center" 
+                            VerticalAlignment="Center"
+                            RenderTransformOrigin="0.5,0.5">
+                <ContentControl.Resources>
+                    <DataTemplate DataType="{x:Type vm:PawnPromotionViewModel}">
+                        <local:PawnPromotionView />
+                    </DataTemplate>
+                </ContentControl.Resources>
+                <ContentControl.RenderTransform>
+                    <RotateTransform Angle="{Binding BoardRotation}" />
+                </ContentControl.RenderTransform>
+            </ContentControl>
         </Grid>
     </Viewbox>
 </UserControl>

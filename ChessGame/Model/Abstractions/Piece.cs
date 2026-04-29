@@ -14,7 +14,7 @@ namespace ChessGame
 
         protected IEnumerable<Position> MovePositionInDir(Position from, IBoard board, Direction dir)
         {
-            for (Position pos = from + dir; Board.IsInside(pos); pos += dir)
+            for (Position pos = from + dir; board.IsInside(pos); pos += dir)
             {
                 if (board.IsEmpty(pos))
                 {

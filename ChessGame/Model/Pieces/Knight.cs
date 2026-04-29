@@ -34,7 +34,7 @@ namespace ChessGame
 
         private IEnumerable<Position> MovePositions(Position from, IBoard board)
         {
-            return PotentialToPositions(from).Where(pos => Board.IsInside(pos)
+            return PotentialToPositions(from).Where(pos => board.IsInside(pos)
                 && (board.IsEmpty(pos) || board[pos].Color != Color));
         }
 

@@ -8,5 +8,6 @@ namespace ChessGame.Model
 {
     public interface IDtoMessage
     {
+        DtoType MessageType { get; }
     }
 }

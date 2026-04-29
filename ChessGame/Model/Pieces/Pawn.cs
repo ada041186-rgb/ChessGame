@@ -1,93 +1,116 @@
 ﻿using ChessGame.Model;
+using ChessGame.Model.Abstractions;
 using ChessGame.Model.Moves;
+using ChessGame.Model.PromotionStrategies;
+using ChessGame.Services;
 
 namespace ChessGame
 {
     public class Pawn : Piece
     {
+        private readonly IMoveFactory _moveFactory;
+
         public override PieceType Type => PieceType.Pawn;
         public override Player Color { get; }
 
-        public readonly Direction forward;
+        private readonly Direction _forward;
+        private static readonly Direction[] _diagonals = { Direction.West, Direction.East };
+        private readonly IEnumerable<IPromotionStrategy> _promotionStrategies;
 
-        public Pawn(Player player)
+        public Pawn(Player player, IMoveFactory moveFactory, IEnumerable<IPromotionStrategy> promotionStrategies)
         {
             Color = player;
+            _moveFactory = moveFactory;
+
 
             if (player == Player.White)
             {
-                forward = Direction.North;
+                _forward = Direction.North;
             }
-            else if(player == Player.Black)
+            else
             {
-                forward = Direction.South;
+                _forward = Direction.South;
             }
+
+            _promotionStrategies = promotionStrategies;
         }
 
         public override Piece Copy()
         {
-            Piece copy = new Pawn(Color);
-            copy.HasMoved = this.HasMoved;
-            return copy;
-        }
-
-        private static bool CanMoveTo(Position pos, IBoard board)
-        {
-            return Board.IsInside(pos) && board.IsEmpty(pos);
-        }
-
-        private bool CanCapture(Position pos, IBoard board)
-        {
-            if (!Board.IsInside(pos) || board.IsEmpty(pos))
+            return new Pawn(Color, _moveFactory, _promotionStrategies)
             {
-                return false;
-            }
-
-            return board[pos].Color != Color;
-        }
-
-        private IEnumerable<Move> ForwardMoves(Position from, IBoard board)
-        {
-            Position oneMovePos = from + forward;
-
-            if(CanMoveTo(oneMovePos, board))
-            {
-                yield return new NormalMove(from, oneMovePos);
-
-                Position twoMovesPos = oneMovePos + forward;
-
-                if (!HasMoved && CanMoveTo(twoMovesPos, board))
-                {
-                    yield return new NormalMove(from, twoMovesPos);
-                }
-            }
-        }
-
-
-        private IEnumerable<Move> DiagonalMoves(Position from, IBoard board)
-        {
-            foreach(Direction dir in new Direction[] { Direction.West, Direction.East })
-            {
-                Position to = from + forward + dir;
-
-                if (CanCapture(to, board))
-                {
-                    yield return new NormalMove(from, to);
-                }
-            }
+                HasMoved = this.HasMoved
+            };
         }
 
         public override IEnumerable<Move> GetMoves(Position from, IBoard board)
         {
-            return ForwardMoves(from, board).Concat(DiagonalMoves(from, board));
+            return GetForwardMoves(from, board).Concat(GetDiagonalMoves(from, board));
         }
+
+        private IEnumerable<Move> GetForwardMoves(Position from, IBoard board)
+        {
+            Position oneStep = from + _forward;
+            if (!CanMoveForward(oneStep, board))
+                yield break;
+
+            foreach (var move in CreateMoves(from, oneStep))
+            {
+                yield return move;
+            }
+
+            Position twoStep = oneStep + _forward;
+            if (!HasMoved && CanMoveForward(twoStep, board))
+            {
+                yield return _moveFactory.CreateNormalMove(from, twoStep);
+            }
+        }
+
+        private IEnumerable<Move> GetDiagonalMoves(Position from, IBoard board)
+        {
+            foreach (var dir in _diagonals)
+            {
+                Position target = from + _forward + dir;
+
+                if (CanCaptureDiagonal(target, board))
+                {
+                    foreach (var move in CreateMoves(from, target))
+                        yield return move;
+                }
+            }
+        }
+
+        private IEnumerable<Move> CreateMoves(Position from, Position to)
+        {
+            if (IsPromotionRow(to))
+            {
+                return _moveFactory.CreatePromotionMoves(from, to, _promotionStrategies);
+            }
+
+            return new[] { _moveFactory.CreateNormalMove(from, to) };
+        }
+
+        private bool CanMoveForward(Position pos, IBoard board)
+            => board.IsInside(pos) && board.IsEmpty(pos);
+
+        private bool CanCaptureDiagonal(Position pos, IBoard board)
+        {
+            if (!board.IsInside(pos)) return false;
+            var piece = board[pos];
+            return piece != null && piece.Color != Color;
+        }
+
+        private bool IsPromotionRow(Position pos)
+            => pos.Row == 0 || pos.Row == 7;
 
         public override bool CanCaptureOpponentKing(Position from, IBoard board)
         {
-            return DiagonalMoves(from, board).Any(move =>
+            return _diagonals.Any(dir =>
             {
-                Piece piece = board[move.ToPos];
-                return piece != null && piece.Type == PieceType.King;
+                Position target = from + _forward + dir;
+                if (!board.IsInside(target)) return false;
+                var piece = board[target];
+                return piece != null && piece.Color != Color && piece.Type == PieceType.King;
             });
         }
     }

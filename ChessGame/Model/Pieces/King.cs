@@ -36,7 +36,7 @@ namespace ChessGame
             {
                 Position to = from + dir;
 
-                if (!Board.IsInside(to))
+                if (!board.IsInside(to))
                 {
                     continue;
                 }

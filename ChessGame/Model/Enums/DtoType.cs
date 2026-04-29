@@ -9,7 +9,8 @@ namespace ChessGame.Model
     public enum DtoType
     {
         None,
-        Move,
+        NormalMove,
+        PromotionMove,
         EndGame,
         StartGame
     }

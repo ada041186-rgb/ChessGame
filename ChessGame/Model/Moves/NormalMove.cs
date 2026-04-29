@@ -11,9 +11,6 @@ namespace ChessGame.Model.Moves
         public override MoveType Type => MoveType.NormalMove;
         public override Position FromPos { get; }
         public override Position ToPos { get; }
-
-        private Piece _pieceMoved;
-        private Piece _pieceCaptured;
         public NormalMove(Position fromPos, Position toPos)
         {
             FromPos = fromPos;
@@ -21,19 +18,13 @@ namespace ChessGame.Model.Moves
         }
         public override void Execute(IBoard board)
         {
-            _pieceMoved = board[FromPos];
-            _pieceCaptured = board[ToPos];
+            var pieceMoved = board[FromPos];
+            var pieceCaptured = board[ToPos];
 
-            _pieceMoved.HasMoved = true;
+            pieceMoved.HasMoved = true;
 
-            board[ToPos] = _pieceMoved;
+            board[ToPos] = pieceMoved;
             board[FromPos] = null;
-        }
-
-        public override void Undo(IBoard board)
-        {
-            board[FromPos] = _pieceMoved;
-            board[ToPos] = _pieceCaptured;
         }
     }
 }

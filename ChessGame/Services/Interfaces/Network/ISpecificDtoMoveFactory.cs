@@ -1,15 +1,17 @@
 ﻿using ChessGame.Model;
-using ChessGame.Model.Moves;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace ChessGame.Services.Interfaces
+namespace ChessGame.Services
 {
-    public interface IDtoMoveFactory
+    public interface ISpecificDtoMoveFactory
     {
+        DtoType TargetDtoType { get; }
+        MoveType TargetMoveType { get; }
+
         Move GetMoveFromDTO(IDtoMessage dtoMove);
         IDtoMessage GetMoveToDTO(Move move);
     }

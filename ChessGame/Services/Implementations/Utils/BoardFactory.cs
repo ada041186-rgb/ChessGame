@@ -1,4 +1,5 @@
 ﻿using ChessGame.Model;
+using ChessGame.Model.Abstractions;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,6 +10,15 @@ namespace ChessGame.Services.Implementations
 {
     public class BoardFactory : IBoardFactory
     {
+        private readonly IEnumerable<IPromotionStrategy> _promotionStrategies;
+        private readonly IMoveFactory _moveFactory;
+
+        public BoardFactory(IEnumerable<IPromotionStrategy> promotionStrategies, IMoveFactory moveFactory)
+        {
+            _promotionStrategies = promotionStrategies;
+            _moveFactory = moveFactory;
+        }
+
         public IBoard CreateInitial()
         {
             IBoard board = new Board();
@@ -18,8 +28,8 @@ namespace ChessGame.Services.Implementations
 
             for (int i = 0; i < 8; i++)
             {
-                board[1, i] = new Pawn(Player.Black);
-                board[6, i] = new Pawn(Player.White);
+                board[1, i] = new Pawn(Player.Black, _moveFactory, _promotionStrategies);
+                board[6, i] = new Pawn(Player.White, _moveFactory, _promotionStrategies);
             }
 
             return board;

@@ -21,7 +21,7 @@ namespace ChessGame.ViewModel
 {
     public class GameViewModel : BaseViewModel, IDisposable
     {
-        protected readonly Dictionary<Position, Move> moveCache = new Dictionary<Position, Move>();
+        protected readonly Dictionary<Position, List<Move>> moveCache = new Dictionary<Position, List<Move>>();
         public CellsViewModel CellsViewModel { get; set; }
         public HighlightsViewModel HighlightsViewModel { get; set; }
         private Position SelectedPos { get; set; }
@@ -35,16 +35,25 @@ namespace ChessGame.ViewModel
                 NotifyPropertyChanged();
             }
         }
+        private PawnPromotionViewModel _promotionViewModel;
+        public PawnPromotionViewModel PromotionViewModel
+        {
+            get => _promotionViewModel;
+            set { _promotionViewModel = value; NotifyPropertyChanged(); }
+        }
         private readonly IGameService _gameService;
         private readonly INetworkService _networkService;
         private readonly INavigationService _navigationService;
+        private readonly IDtoMoveFactory _dtoMoveFactory;
 
         public ICommand CellClickCommand { get; }
-        public GameViewModel(IGameService gameService, INetworkService networkService, INavigationService navigationService)
+        public GameViewModel(IGameService gameService, INetworkService networkService, 
+            INavigationService navigationService, IDtoMoveFactory dtoMoveFactory)
         {
             _gameService = gameService;
             _networkService = networkService;
             _navigationService = navigationService;
+            _dtoMoveFactory = dtoMoveFactory;
 
             InitializeBoard();
 
@@ -73,7 +82,9 @@ namespace ChessGame.ViewModel
         {
             if (_gameService.IsCurrentPlayer())
             {
-                _networkService.SendAsync(DtoType.Move, new DtoMove(move));
+                var dtoMessage = _dtoMoveFactory.GetMoveToDTO(move);
+
+                _networkService.SendAsync(dtoMessage.MessageType, dtoMessage);
             }
         }
         private void OnBoardUpdated()
@@ -112,7 +123,12 @@ namespace ChessGame.ViewModel
 
             foreach (Move move in moves)
             {
-                moveCache[move.ToPos] = move;
+                if (!moveCache.ContainsKey(move.ToPos))
+                {
+                    moveCache[move.ToPos] = new List<Move>();
+                }
+
+                moveCache[move.ToPos].Add(move);
             }
         }
         private void OnCellClick(object obj)
@@ -151,10 +167,27 @@ namespace ChessGame.ViewModel
         {
             SelectedPos = null;
             HighlightsViewModel.HideHighlights();
-
-            if(moveCache.TryGetValue(pos, out Move move))
+            
+            if (moveCache.TryGetValue(pos, out List<Move> movesToPos))
             {
-                _gameService.TryMakeMove(move);
+                if (!movesToPos.Any()) return;
+
+                if (movesToPos.Any(m => m is PawnPromotion))
+                {
+                    var promotionVM = new PawnPromotionViewModel(movesToPos, _gameService.ThisPlayer);
+
+                    promotionVM.PromotionSelected += (finalMove) =>
+                    {
+                        _gameService.TryMakeMove(finalMove);
+                        PromotionViewModel = null;
+                    };
+
+                    PromotionViewModel = promotionVM;
+                }
+                else
+                {
+                    _gameService.TryMakeMove(movesToPos.First());
+                }
             }
         }
 
