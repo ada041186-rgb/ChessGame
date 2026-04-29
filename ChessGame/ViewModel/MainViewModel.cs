@@ -1,10 +1,11 @@
 ﻿using ChessGame.Model;
 using ChessGame.Services;
 using ChessGame.Services.Interfaces;
+using System.ComponentModel;
 
 namespace ChessGame.ViewModel
 {
-    public class MainViewModel : BaseViewModel
+    public class MainViewModel : BaseViewModel, IDisposable
     {
         private readonly INavigationService _navigation;
         private readonly IGameService _gameService;
@@ -17,19 +18,24 @@ namespace ChessGame.ViewModel
             _gameService = gameService;
             _navigation = navigation;
 
-            _navigation.PropertyChanged += (s, e) =>
-            {
-                if (e.PropertyName == nameof(INavigationService.CurrentView))
-                {
-                    NotifyPropertyChanged(nameof(CurrentView));
-                }
-            };
-
+            _navigation.PropertyChanged += OnNavigationPropertyChanged;
             _gameService.PlayerChanged += OnPlayerChanged;
         }
         private void OnPlayerChanged()
         {
             NotifyPropertyChanged(nameof(CurrentPlayerSide));
+        }
+        private void OnNavigationPropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName == nameof(INavigationService.CurrentView))
+            {
+                NotifyPropertyChanged(nameof(CurrentView));
+            }
+        }
+        public void Dispose()
+        {
+            _navigation.PropertyChanged -= OnNavigationPropertyChanged;
+            _gameService.PlayerChanged -= OnPlayerChanged;
         }
     }
 }

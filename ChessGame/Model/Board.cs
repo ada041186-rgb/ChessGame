@@ -14,13 +14,13 @@ namespace ChessGame.Model
         public Piece this[int row, int col]
         {
             get { return pieces[row, col]; }
-            set { pieces[row, col] = value; }
+            internal set { pieces[row, col] = value; }
         }
 
         public Piece this[Position pos]
         {
             get { return pieces[pos.Row, pos.Column]; }
-            set { pieces[pos.Row, pos.Column] = value; }
+            internal set { pieces[pos.Row, pos.Column] = value; }
         }
 
         public static bool IsInside(Position pos)
@@ -54,31 +54,10 @@ namespace ChessGame.Model
             return PiecePositions().Where(pos => this[pos].Color == player);
         }
 
-        public bool IsInCheck(Player player)
-        {
-            return PiecePositionsFor(player.Opponent()).Any(pos =>
-            {
-                Piece piece = this[pos];
-                return piece.CanCaptureOpponentKing(pos, this);
-            });
-        }
-
         public Position FindKing(Player player)
         {
             return PiecePositionsFor(player)
-                .First(pos => this[pos].Type == PieceType.King);
-        }
-
-        public Board Copy()
-        {
-            Board copy = new Board();
-
-            foreach (Position pos in PiecePositions())
-            {
-                copy[pos] = this[pos].Copy();
-            }
-
-            return copy;
+                .FirstOrDefault(pos => this[pos].Type == PieceType.King);
         }
     }
 }

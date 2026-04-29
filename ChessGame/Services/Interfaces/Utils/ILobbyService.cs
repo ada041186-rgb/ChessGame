@@ -6,12 +6,7 @@ namespace ChessGame.Services.Interfaces
 {
     public interface ILobbyService
     {
-        bool IsHost { get; }
-        bool IsConnected { get; }
-        string HeaderText { get; }
-
-        event Action StateChanged;
-
+        event Action<bool> IsConnected;
         Task InitializeAsync(bool isHost, string ip = null);
         Task StartGameAsync();
     }

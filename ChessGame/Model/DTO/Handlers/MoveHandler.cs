@@ -24,7 +24,7 @@ namespace ChessGame.Model.DTO.Handlers
             {
                 try
                 {
-                    _gameService.MakeMove(move, sendToOpponent: false);
+                    _gameService.TryMakeMove(move);
                 }
                 catch (Exception ex)
                 {

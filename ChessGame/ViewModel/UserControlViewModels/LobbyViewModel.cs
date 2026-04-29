@@ -1,17 +1,33 @@
 ﻿using ChessGame.Commands;
+using ChessGame.Services.Implementations;
 using ChessGame.Services.Interfaces;
 using System.Windows.Input;
 
 namespace ChessGame.ViewModel
 {
-    public class LobbyViewModel : BaseViewModel
+    public class LobbyViewModel : BaseViewModel, IDisposable
     {
         private readonly ILobbyService _lobbyService;
         private readonly INavigationService _navigation;
 
-        public string HeaderText => _lobbyService.HeaderText;
-        public bool IsHost => _lobbyService.IsHost;
-        public bool IsOtherPlayerConnected => _lobbyService.IsConnected;
+        private string _headerText;
+        public string HeaderText
+        {
+            get { return _headerText; }
+            set { _headerText = value; NotifyPropertyChanged(); }
+        }
+        private bool _isHost;
+        public bool IsHost
+        {
+            get { return _isHost; }
+            set { _isHost = value; NotifyPropertyChanged(); }
+        }
+        private bool _isOtherPlayerConnected;
+        public bool IsOtherPlayerConnected
+        {
+            get { return _isOtherPlayerConnected; }
+            set { _isOtherPlayerConnected = value; NotifyPropertyChanged(); }
+        }
 
         public bool CanStartGame => IsHost && IsOtherPlayerConnected;
         public ICommand StartGameCommand { get; }
@@ -21,7 +37,7 @@ namespace ChessGame.ViewModel
             _lobbyService = lobbyService;
             _navigation = navigation;
 
-            _lobbyService.StateChanged += OnStateChanged;
+            _lobbyService.IsConnected += OnConnected;
 
             StartGameCommand = new AsyncRelayCommand(
                 StartGameAsync,
@@ -29,18 +45,27 @@ namespace ChessGame.ViewModel
             );
         }
 
-        private void OnStateChanged()
+        private void OnConnected(bool isConnected)
         {
-            NotifyPropertyChanged(nameof(HeaderText));
-            NotifyPropertyChanged(nameof(IsOtherPlayerConnected));
-            NotifyPropertyChanged(nameof(IsHost));
+            IsOtherPlayerConnected = isConnected;
+            UpdateHeader();
+
             NotifyPropertyChanged(nameof(CanStartGame));
 
             (StartGameCommand as AsyncRelayCommand)?.RaiseCanExecuteChanged();
         }
+        private void UpdateHeader()
+        {
+            HeaderText = IsHost
+                ? (IsOtherPlayerConnected ? "Суперник приєднався" : "Очікування суперника")
+                : "Очікування початку гри";
+        }
+        public async Task ConfigureAsync(bool isHost, string ip = null)
+        {
+            IsHost = isHost;
 
-        public Task ConfigureAsync(bool isHost, string ip = null)
-            => _lobbyService.InitializeAsync(isHost, ip);
+            await _lobbyService.InitializeAsync(isHost, ip);
+        }
 
         private async Task StartGameAsync()
         {
@@ -49,9 +74,10 @@ namespace ChessGame.ViewModel
             _navigation.NavigateTo<GameViewModel>();
         }
 
+
         public void Dispose()
         {
-            _lobbyService.StateChanged -= OnStateChanged;
+            _lobbyService.IsConnected -= OnConnected;
         }
     }
 }

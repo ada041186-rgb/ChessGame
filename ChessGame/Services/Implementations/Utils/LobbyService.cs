@@ -14,12 +14,8 @@ namespace ChessGame.Services.Implementations
         private readonly INetworkService _networkService;
         private readonly IGameService _gameService;
 
-        public bool IsHost { get; private set; }
-        public bool IsConnected { get; private set; }
-        public string HeaderText { get; private set; }
-
-        public event Action StateChanged;
-
+        public event Action<bool> IsConnected;
+        private int _port = 55555;
         public LobbyService(INetworkService networkService, IGameService gameService)
         {
             _networkService = networkService;
@@ -28,42 +24,26 @@ namespace ChessGame.Services.Implementations
 
         public async Task InitializeAsync(bool isHost, string ip = null)
         {
-            IsHost = isHost;
-            IsConnected = false;
-            UpdateHeader();
-
             if (isHost)
             {
-                await _networkService.StartServerAsync(55555);
-                IsConnected = true;
+                await _networkService.StartServerAsync(_port);
             }
             else
             {
-                await _networkService.ConnectAsync(ip, 55555);
-                IsConnected = true;
+                await _networkService.ConnectAsync(ip, _port);
             }
 
-            UpdateHeader();
-            StateChanged?.Invoke();
+            IsConnected?.Invoke(true);
         }
 
         public async Task StartGameAsync()
         {
-            if (!IsHost) return;
-
             await _networkService.SendAsync(
                 DtoType.StartGame,
                 new DtoStartGame(Player.Black)
             );
 
-            _gameService.StartGame(Player.White);
-        }
-
-        private void UpdateHeader()
-        {
-            HeaderText = IsHost
-                ? (IsConnected ? "Суперник приєднався" : "Очікування суперника")
-                : "Очікування початку гри";
+            _gameService.InitGame(Player.White);
         }
     }
 }

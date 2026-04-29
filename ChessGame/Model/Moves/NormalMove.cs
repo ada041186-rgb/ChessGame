@@ -12,18 +12,26 @@ namespace ChessGame.Model.Moves
         public override Position FromPos { get; }
         public override Position ToPos { get; }
 
+        private Piece _pieceMoved;
+        private Piece _pieceCaptured;
         public NormalMove(Position fromPos, Position toPos)
         {
             FromPos = fromPos;
             ToPos = toPos;
         }
-
         public override void Execute(Board board)
         {
-            Piece piece = board[FromPos];
-            board[ToPos] = piece;
+            _pieceMoved = board[FromPos];
+            _pieceCaptured = board[ToPos];
+
+            board[ToPos] = _pieceMoved;
             board[FromPos] = null;
-            piece.HasMoved = true;
+        }
+
+        public override void Undo(Board board)
+        {
+            board[FromPos] = _pieceMoved;
+            board[ToPos] = _pieceCaptured;
         }
     }
 }

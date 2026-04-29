@@ -19,7 +19,7 @@ namespace ChessGame.Model.DTO.Handlers
         {
             System.Windows.Application.Current.Dispatcher.Invoke(() =>
             {
-                _gameService.StartGame(message.StartingSide);
+                _gameService.InitGame(message.StartingSide);
                 _navigationService.NavigateTo<GameViewModel>();
             });
 

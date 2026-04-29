@@ -8,9 +8,10 @@ namespace ChessGame.Services.Interfaces
 
         event Action BoardChanged;
         event Action PlayerChanged;
+        event Action<Move> MoveExecuted;
 
-        void StartGame(Player player);
-        void MakeMove(Move move, bool sendToOpponent = false);
+        void InitGame(Player player);
+        bool TryMakeMove(Move move);
         IEnumerable<Move> GetLegalMoves(Position pos);
         bool IsCurrentPlayer();
         Board GetBoard();

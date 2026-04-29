@@ -35,19 +35,30 @@ namespace ChessGame.ViewModel
             }
         }
         private readonly IGameService _gameService;
+        private readonly INetworkService _networkService;
 
         public ICommand CellClickCommand { get; }
-        public GameViewModel(IGameService gameService)
+        public GameViewModel(IGameService gameService, INetworkService networkService)
         {
             _gameService = gameService;
+            _networkService = networkService;
+
             InitializeBoard();
 
             CellClickCommand = new RelayCommand(OnCellClick);
 
             _gameService.BoardChanged += OnBoardUpdated;
+            _gameService.MoveExecuted += OnMoveExecuted;
 
             IsFlipped();
             OnBoardUpdated();
+        }
+        private void OnMoveExecuted(Move move)
+        {
+            if (_gameService.IsCurrentPlayer())
+            {
+                _networkService.SendAsync(DtoType.Move, new DtoMove(move));
+            }
         }
         private void OnBoardUpdated()
         {
@@ -127,7 +138,7 @@ namespace ChessGame.ViewModel
 
             if(moveCache.TryGetValue(pos, out Move move))
             {
-                _gameService.MakeMove(move, sendToOpponent: true);
+                _gameService.TryMakeMove(move);
             }
         }
     }

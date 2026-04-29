@@ -1,90 +1,73 @@
 ﻿using ChessGame.Model;
 using ChessGame.Model.Moves;
 using ChessGame.Services.Interfaces;
+using ChessGame.Services.Interfaces.Utils;
 
 namespace ChessGame.Services
 {
     public class GameService : IGameService
     {
-        private readonly IGameState _state;
-        private readonly IBoardFactory _boardFactory;
-        private readonly INetworkService _networkService;
+        private IGameState _state;
+        private readonly IGameStateFactory _stateFactory;
+        private readonly IChessRulesService _rules;
+
         public Player ThisPlayer => _state.ThisPlayer;
 
         public event Action BoardChanged;
         public event Action PlayerChanged;
+        public event Action<Move> MoveExecuted;
 
-        public GameService(IGameState state, IBoardFactory boardFactory, INetworkService networkService)
+        public GameService(IGameStateFactory stateFactory, IChessRulesService rules)
         {
-            _state = state;
-            _boardFactory = boardFactory;
-            _networkService = networkService;
+            _stateFactory = stateFactory;
+            _rules = rules;
+            _state = _stateFactory.Create(Player.None);
         }
 
-        public void StartGame(Player player)
+        public void InitGame(Player player)
         {
-            var board = _boardFactory.CreateInitial();
-            _state.Initialize(player, board);
-
-            BoardChanged?.Invoke();
-            PlayerChanged?.Invoke();
+            _state = _stateFactory.Create(player);
+            RaiseEvents();
         }
 
         public bool IsCurrentPlayer()
         {
             return _state.ThisPlayer == _state.CurrentPlayer;
         }
+
         public Board GetBoard()
         {
             return _state.Board;
         }
 
-        public Position GetKingInCheck()
+        public bool TryMakeMove(Move move)
         {
-            var board = _state.Board;
-
-            if (board.IsInCheck(Player.White))
+            if (!_rules.IsMoveLegal(_state.Board, move))
             {
-                return board.FindKing(Player.White);
+                return false;
             }
 
-            if (board.IsInCheck(Player.Black))
-            {
-                return board.FindKing(Player.Black);
-            }
+            move.Execute(_state.Board);
+            MoveExecuted?.Invoke(move);
 
-            return null;
+            _state.CurrentPlayer = _state.CurrentPlayer.Opponent();
+            RaiseEvents();
+
+            return true;
         }
 
         public IEnumerable<Move> GetLegalMoves(Position pos)
         {
-            if (_state.Board.IsEmpty(pos))
-                return Enumerable.Empty<Move>();
-
-            var piece = _state.Board[pos];
-
-            if (piece.Color != _state.CurrentPlayer)
-                return Enumerable.Empty<Move>();
-
-            IEnumerable<Move> moveCandidates = piece.GetMoves(pos, _state.Board);
-
-            return moveCandidates.Where(move => move.IsLegal(_state.Board));
+            return _rules.GetLegalMoves(_state.Board, _state.CurrentPlayer, pos);
         }
 
-        public void MakeMove(Move move, bool sendToOpponent = false)
+        public Position GetKingInCheck()
         {
-            if (sendToOpponent && !IsCurrentPlayer())
-                return;
+            return _rules.GetKingInCheck(_state.Board);
+        }
 
-            move.Execute(_state.Board);
-
-            if (sendToOpponent)
-            {
-                _networkService.SendAsync(DtoType.Move, new DtoMove(move));
-            }
-
-            _state.CurrentPlayer = _state.CurrentPlayer.Opponent();
-
+        private void RaiseEvents()
+        {
             BoardChanged?.Invoke();
             PlayerChanged?.Invoke();
         }

@@ -10,7 +10,7 @@ namespace ChessGame.Model
     {
         Player ThisPlayer { get; }
         Player CurrentPlayer { get; set; }
-        Board Board { get; set; }
+        Board Board { get; }
 
         void Initialize(Player thisPlayer, Board board);
     }

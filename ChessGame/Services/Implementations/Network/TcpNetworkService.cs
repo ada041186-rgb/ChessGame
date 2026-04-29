@@ -21,7 +21,10 @@ namespace ChessGame.Services.Implementations
         private StreamReader reader;
         private StreamWriter writer;
 
-        public bool IsConnected => tcpClient?.Connected == true;
+        private CancellationTokenSource _cts;
+
+        private Task _listenTask;
+        private bool _isListening;
 
         public TcpNetworkService(IDtoResolver resolver, IMessageDispatcher dispatcher)
         {
@@ -32,12 +35,24 @@ namespace ChessGame.Services.Implementations
 
         public async Task StartServerAsync(int port)
         {
-            tcpListener = new TcpListener(IPAddress.Any, port);
-            tcpListener.Start();
+            try
+            {
+                tcpListener?.Stop();
 
-            tcpClient = await tcpListener.AcceptTcpClientAsync();
-            InitStreams();
-            StartListening();
+                tcpListener = new TcpListener(IPAddress.Any, port);
+                tcpListener.Server.SetSocketOption(SocketOptionLevel.Socket, SocketOptionName.ReuseAddress, true);
+
+                tcpListener.Start();
+
+                tcpClient = await tcpListener.AcceptTcpClientAsync();
+                InitStreams();
+                StartListening();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[SERVER START ERROR]: {ex.Message}");
+                throw;
+            }
         }
 
         public async Task ConnectAsync(string ip, int port)
@@ -58,37 +73,34 @@ namespace ChessGame.Services.Implementations
 
         private void StartListening()
         {
-            _ = Task.Run(async () =>
+            if (_isListening) return;
+
+            _isListening = true;
+            _cts = new CancellationTokenSource();
+
+            _listenTask = Task.Run(async () =>
             {
                 try
                 {
-                    while (tcpClient?.Connected == true)
+                    while (!_cts.IsCancellationRequested)
                     {
                         var raw = await reader.ReadLineAsync();
                         if (raw == null) break;
 
-                        NetworkMessage msg = null;
-
-                        try
-                        {
-                            msg = JsonSerializer.Deserialize<NetworkMessage>(raw);
-                        }
-                        catch
-                        {
-                            continue;
-                        }
-
-                        if (msg == null)
-                            continue;
+                        var msg = JsonSerializer.Deserialize<NetworkMessage>(raw);
+                        if (msg == null) continue;
 
                         var dto = _resolver.Deserialize(msg);
-
                         await _dispatcher.DispatchAsync(dto);
                     }
                 }
                 catch (Exception ex)
                 {
                     Console.WriteLine($"[Network Error] {ex}");
+                }
+                finally
+                {
+                    _isListening = false;
                 }
             });
         }
@@ -120,11 +132,25 @@ namespace ChessGame.Services.Implementations
             }
         }
 
-        public Task DisconnectAsync()
+        public async Task DisconnectAsync()
         {
-            tcpClient?.Close();
-            tcpListener?.Stop();
-            return Task.CompletedTask;
+            try
+            {
+                _cts?.Cancel();
+
+                reader?.Dispose();
+                writer?.Dispose();
+
+                tcpClient?.Close();
+                tcpListener?.Stop();
+
+                if (_listenTask != null)
+                    await _listenTask;
+
+                _cts = null;
+                _listenTask = null;
+            }
+            catch { }
         }
     }
 }
