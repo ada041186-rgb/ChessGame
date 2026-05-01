@@ -9,5 +9,6 @@ namespace ChessApplication.Interfaces.Network
 
         Task SendAsync(DtoType type, IDtoMessage message);
         Task DisconnectAsync();
+        void Dispose();
     }
 }

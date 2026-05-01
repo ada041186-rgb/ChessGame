@@ -7,12 +7,10 @@ namespace ChessInfrastructure.DTO.Handlers
 {
     public class StartGameHandler : IMessageHandler<DtoStartGame>
     {
-        private readonly IGameService _gameService;
         private readonly ILobbyService _lobbyService;
 
-        public StartGameHandler(IGameService gameService, ILobbyService lobbyService)
+        public StartGameHandler(ILobbyService lobbyService)
         {
-            _gameService = gameService;
             _lobbyService = lobbyService;
         }
 

@@ -67,13 +67,20 @@ namespace ChessLibrary.Board
 
         public IEnumerable<Position> PiecePositionsFor(Player player)
         {
-            return PiecePositions().Where(pos => this[pos].Color == player);
+            return PiecePositions()
+                .Where(pos => this[pos] != null && this[pos].Color == player);
         }
 
         public Position FindKing(Player player)
         {
-            return PiecePositionsFor(player)
-                .FirstOrDefault(pos => this[pos].Type == PieceType.King);
+            foreach (var pos in PiecePositionsFor(player))
+            {
+                var piece = this[pos];
+                if (piece?.Type == PieceType.King)
+                    return pos;
+            }
+
+            return null;
         }
 
         public IBoard Copy()

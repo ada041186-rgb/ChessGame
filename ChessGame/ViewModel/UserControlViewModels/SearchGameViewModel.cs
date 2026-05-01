@@ -30,10 +30,9 @@ namespace ChessGame.ViewModel.UserControlViewModels
         public ICommand JoinCommand { get; }
         public ICommand MenuCommand { get; }
 
-        public SearchGameViewModel(
-                INavigationService navigation,
-                IViewModelFactory<LobbyParams> lobbyFactory,
-                ILobbyService lobbyService)
+        public SearchGameViewModel( INavigationService navigation,
+                                    IViewModelFactory<LobbyParams> lobbyFactory, 
+                                    ILobbyService lobbyService)
         {
             _navigation = navigation;
             _lobbyFactory = lobbyFactory;

@@ -32,8 +32,8 @@ namespace ChessInfrastructure.Network
                 PropertyNameCaseInsensitive = true
             };
 
-            var dto = JsonSerializer.Deserialize(message.Payload, type, options);
-
+            var json = message.Payload.GetRawText();
+            var dto = JsonSerializer.Deserialize(json, type, options);
             return (IDtoMessage)dto!;
         }
     }

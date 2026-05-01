@@ -4,6 +4,8 @@ using ChessGame.Commands;
 using ChessGame.Utils;
 using ChessGame.ViewModel.Base;
 using ChessGame.ViewModel.Game;
+using ChessLibrary.Enums;
+using System.Windows;
 using System.Windows.Input;
 
 namespace ChessGame.ViewModel.UserControlViewModels
@@ -41,13 +43,22 @@ namespace ChessGame.ViewModel.UserControlViewModels
             _navigation = navigation;
 
             _lobbyService.IsConnected += OnConnected;
+            _lobbyService.GameStarted += OnGameStarted;
 
             StartGameCommand = new AsyncRelayCommand(
                 StartGameAsync,
                 () => CanStartGame
             );
         }
-
+        private void OnGameStarted(Player player)
+        {
+            _lobbyService.Reset();
+            _navigation.NavigateTo<GameViewModel>();
+        }
+        private async Task StartGameAsync()
+        {
+            await _lobbyService.StartLanGameAsync(Player.White);
+        }
         private void OnConnected(bool isConnected)
         {
             IsOtherPlayerConnected = isConnected;
@@ -70,17 +81,12 @@ namespace ChessGame.ViewModel.UserControlViewModels
             await _lobbyService.InitializeAsync(lobbyParams);
         }
 
-        private async Task StartGameAsync()
-        {
-            await _lobbyService.HandleLocalStartGame();
-
-            _navigation.NavigateTo<GameViewModel>();
-        }
-
-
         public void Dispose()
         {
             _lobbyService.IsConnected -= OnConnected;
+            _lobbyService.GameStarted -= OnGameStarted;
+
+            _lobbyService.Reset();
         }
     }
 }

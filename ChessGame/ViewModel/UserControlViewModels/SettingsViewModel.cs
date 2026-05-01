@@ -1,4 +1,5 @@
-﻿using ChessApplication.Interfaces.Utils;
+﻿using ChessApplication.DTO;
+using ChessApplication.Interfaces.Utils;
 using ChessGame.Commands;
 using ChessGame.Utils;
 using ChessGame.ViewModel.Base;

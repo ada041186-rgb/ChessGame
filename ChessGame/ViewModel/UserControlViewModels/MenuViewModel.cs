@@ -27,7 +27,6 @@ namespace ChessGame.ViewModel.UserControlViewModels
             _lobbyFactory = lobbyFactory;
 
             CreateGameCommand = new RelayCommand(CreateGameAsync);
-
             SearchGameCommand = new RelayCommand(SearchGame);
             SettingsCommand = new RelayCommand(Settings);
             ExitCommand = new RelayCommand(Exit);

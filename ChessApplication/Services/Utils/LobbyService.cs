@@ -16,7 +16,9 @@ namespace ChessApplication.Services.Utils
         public event Action<bool>? IsConnected;
         public event Action<Player>? GameStarted;
 
-        private const int _port = 55555;
+        private const int PORT = 55555;
+        private bool _initialized = false;
+        private readonly SemaphoreSlim _initLock = new(1, 1);
 
         public LobbyService(INetworkService networkService, IGameService gameService)
         {
@@ -29,14 +31,16 @@ namespace ChessApplication.Services.Utils
             InitializeLocalGame(message.StartingSide);
         }
 
-        public async Task StartLanGameAsync(Player player)
+        public async Task StartLanGameAsync(Player hostPlayer)
         {
+            var clientPlayer = hostPlayer.Opponent();
+
             await _networkService.SendAsync(
                 DtoType.StartGame,
-                new DtoStartGame(player.Opponent())
+                new DtoStartGame(clientPlayer)
             );
 
-            InitializeLocalGame(player);
+            InitializeLocalGame(hostPlayer);
         }
 
         private void InitializeLocalGame(Player player)
@@ -47,25 +51,41 @@ namespace ChessApplication.Services.Utils
 
         public async Task<bool> InitializeAsync(LobbyParams lobbyParams)
         {
-            bool success;
             bool isHost = lobbyParams.IsHost;
             string ip = lobbyParams.IpAdress;
+            bool success;
 
-            if (isHost)
+            await _initLock.WaitAsync();
+            try
             {
-                success = await _networkService.StartServerAsync(_port);
+                if (_initialized)
+                    return true;
+
+                if (isHost)
+                    success = await _networkService.StartServerAsync(PORT);
+                else
+                {
+                    if (string.IsNullOrWhiteSpace(ip))
+                        return false;
+
+                    success = await _networkService.ConnectAsync(ip, PORT);
+                }
+
+                _initialized = success;
             }
-            else
+            finally
             {
-                if (string.IsNullOrWhiteSpace(ip))
-                    return false;
-
-                success = await _networkService.ConnectAsync(ip, _port);
+                _initLock.Release();
             }
 
             IsConnected?.Invoke(success);
 
             return success;
+        }
+
+        public void Reset()
+        {
+            _initialized = false;
         }
     }
 }

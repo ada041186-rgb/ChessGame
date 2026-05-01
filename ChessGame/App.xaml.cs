@@ -35,6 +35,9 @@ namespace ChessGame
                 builder.SetMinimumLevel(LogLevel.Debug);
             });
 
+            services.AddSingleton<SynchronizationContext>(sp =>
+                    SynchronizationContext.Current ?? new System.Windows.Threading.DispatcherSynchronizationContext());
+
             ServiceProvider = services.BuildServiceProvider();
         }
 
