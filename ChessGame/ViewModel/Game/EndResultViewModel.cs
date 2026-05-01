@@ -1,14 +1,13 @@
-﻿using ChessGame.Commands;
-using ChessGame.Model;
-using ChessGame.Services.Interfaces;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using ChessApplication.Interfaces.Network;
+using ChessGame.Commands;
+using ChessGame.Utils;
+using ChessGame.ViewModel.Base;
+using ChessGame.ViewModel.UserControlViewModels;
+using ChessLibrary.Enums;
+using ChessLibrary.Game;
 using System.Windows.Input;
 
-namespace ChessGame.ViewModel
+namespace ChessGame.ViewModel.Game
 {
     public class EndResultViewModel : BaseViewModel
     {

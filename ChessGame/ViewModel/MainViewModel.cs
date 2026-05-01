@@ -1,7 +1,7 @@
-﻿using ChessGame.Model;
-using ChessGame.Services;
-using ChessGame.Services.Interfaces;
-using System.ComponentModel;
+﻿using ChessApplication.Interfaces.Game;
+using ChessGame.Utils;
+using ChessGame.ViewModel.Base;
+using ChessLibrary.Enums;
 
 namespace ChessGame.ViewModel
 {

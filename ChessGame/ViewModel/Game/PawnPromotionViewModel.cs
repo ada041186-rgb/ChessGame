@@ -1,13 +1,11 @@
 ﻿using ChessGame.Commands;
-using ChessGame.Model;
 using ChessGame.Model.Data;
-using ChessGame.Model.Moves;
-using System;
-using System.Collections.Generic;
+using ChessGame.Utils;
+using ChessGame.ViewModel.Base;
+using ChessLibrary.Enums;
+using ChessLibrary.Moves;
+using ChessLibrary.Moves.PawnMoves;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Input;
 
 namespace ChessGame.ViewModel.Game

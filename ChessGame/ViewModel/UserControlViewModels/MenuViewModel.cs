@@ -1,12 +1,12 @@
-﻿using ChessGame.Commands;
-using ChessGame.Model.Data;
-using ChessGame.Services.Interfaces;
-using ChessGame.Services.Interfaces.Factories;
-using System.Threading.Tasks;
+﻿using ChessApplication.DTO;
+using ChessGame.Commands;
+using ChessGame.Factories.ViewModelsFactories;
+using ChessGame.Utils;
+using ChessGame.ViewModel.Base;
 using System.Windows;
 using System.Windows.Input;
 
-namespace ChessGame.ViewModel
+namespace ChessGame.ViewModel.UserControlViewModels
 {
     public class MenuViewModel : BaseViewModel
     {

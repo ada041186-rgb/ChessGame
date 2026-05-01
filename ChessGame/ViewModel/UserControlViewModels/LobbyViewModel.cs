@@ -1,10 +1,12 @@
-﻿using ChessGame.Commands;
-using ChessGame.Model.Data;
-using ChessGame.Services.Implementations;
-using ChessGame.Services.Interfaces;
+﻿using ChessApplication.DTO;
+using ChessApplication.Interfaces.Utils;
+using ChessGame.Commands;
+using ChessGame.Utils;
+using ChessGame.ViewModel.Base;
+using ChessGame.ViewModel.Game;
 using System.Windows.Input;
 
-namespace ChessGame.ViewModel
+namespace ChessGame.ViewModel.UserControlViewModels
 {
     public class LobbyViewModel : BaseViewModel, IDisposable
     {
@@ -58,7 +60,7 @@ namespace ChessGame.ViewModel
         private void UpdateHeader()
         {
             HeaderText = IsHost
-                ? (IsOtherPlayerConnected ? "Суперник приєднався" : "Очікування суперника")
+                ? IsOtherPlayerConnected ? "Суперник приєднався" : "Очікування суперника"
                 : "Очікування початку гри";
         }
         public async Task ConfigureAsync(LobbyParams lobbyParams)
@@ -70,7 +72,7 @@ namespace ChessGame.ViewModel
 
         private async Task StartGameAsync()
         {
-            await _lobbyService.StartGameAsync();
+            await _lobbyService.HandleLocalStartGame();
 
             _navigation.NavigateTo<GameViewModel>();
         }

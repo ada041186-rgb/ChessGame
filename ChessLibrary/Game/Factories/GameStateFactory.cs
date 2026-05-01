@@ -1,7 +1,6 @@
 ﻿using ChessLibrary.Board;
 using ChessLibrary.Enums;
 using ChessLibrary.Factories;
-using ChessLibrary.Game;
 
 namespace ChessLibrary.Game.Factories
 {

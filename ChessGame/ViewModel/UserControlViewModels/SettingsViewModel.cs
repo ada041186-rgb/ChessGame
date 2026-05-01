@@ -1,12 +1,12 @@
-﻿using System.Collections.ObjectModel;
+﻿using ChessApplication.Interfaces.Utils;
+using ChessGame.Commands;
+using ChessGame.Utils;
+using ChessGame.ViewModel.Base;
+using System.Collections.ObjectModel;
 using System.Windows;
 using System.Windows.Input;
-using ChessGame.Commands;
-using ChessGame.Model;
-using ChessGame.Services;
-using ChessGame.Services.Interfaces;
 
-namespace ChessGame.ViewModel
+namespace ChessGame.ViewModel.UserControlViewModels
 {
     public class SettingsViewModel : BaseViewModel
     {
@@ -20,7 +20,7 @@ namespace ChessGame.ViewModel
             "1600x900",
             "1920x1080"
         };
-        
+
         private string _selectedResolution;
         public string SelectedResolution
         {

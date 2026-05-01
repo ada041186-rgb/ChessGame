@@ -1,9 +1,10 @@
-﻿using ChessGame.Model;
-using System.Collections.Generic;
+﻿using ChessGame.ViewModel.Base;
+using ChessGame.ViewModel.Game.Cell;
+using ChessLibrary.ValueObjects;
 using System.Collections.ObjectModel;
 using System.Windows.Media;
 
-namespace ChessGame.ViewModel.Game
+namespace ChessGame.ViewModel.Game.Cells
 {
     public class HighlightsViewModel : BaseViewModel
     {

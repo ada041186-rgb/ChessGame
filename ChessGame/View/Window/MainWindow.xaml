@@ -3,58 +3,60 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        
         xmlns:local="clr-namespace:ChessGame"
-        
-        xmlns:viewmodels="clr-namespace:ChessGame.ViewModel"
+        xmlns:vmGame="clr-namespace:ChessGame.ViewModel.Game"
+        xmlns:vmUserControls="clr-namespace:ChessGame.ViewModel.UserControlViewModels"
         xmlns:views="clr-namespace:ChessGame.View.UserControls"
-        
+
+        xmlns:enums="clr-namespace:ChessLibrary.Enums;assembly=ChessLibrary" 
+        xmlns:utils="clr-namespace:ChessGame.Utils"
         mc:Ignorable="d"
         Title="ChessGame" Icon="/Assets/icon.ico"
         MinWidth="640" MinHeight="480"
         ResizeMode="NoResize">
 
     <Window.Resources>
-        <DataTemplate DataType="{x:Type viewmodels:MenuViewModel}">
+        <DataTemplate DataType="{x:Type vmUserControls:MenuViewModel}">
             <views:MenuView />
         </DataTemplate>
-        <DataTemplate DataType="{x:Type viewmodels:SearchGameViewModel}">
+        <DataTemplate DataType="{x:Type vmUserControls:SearchGameViewModel}">
             <views:SearchGameView />
         </DataTemplate>
-        <DataTemplate DataType="{x:Type viewmodels:GameViewModel}">
-            <views:GameView />
-        </DataTemplate>
-        <DataTemplate DataType="{x:Type viewmodels:LobbyViewModel}">
+        <DataTemplate DataType="{x:Type vmUserControls:LobbyViewModel}">
             <views:LobbyView />
         </DataTemplate>
-        <DataTemplate DataType="{x:Type viewmodels:EndResultViewModel}">
-            <views:EndResultView />
-        </DataTemplate>
-        <DataTemplate DataType="{x:Type viewmodels:SettingsViewModel}">
+        <DataTemplate DataType="{x:Type vmUserControls:SettingsViewModel}">
             <views:SettingsView />
+        </DataTemplate>
+
+        <DataTemplate DataType="{x:Type vmGame:GameViewModel}">
+            <views:GameView />
+        </DataTemplate>
+        <DataTemplate DataType="{x:Type vmGame:EndResultViewModel}">
+            <views:EndResultView />
         </DataTemplate>
     </Window.Resources>
 
-
     <Grid>
-
         <Rectangle Fill="{StaticResource BackgroundColor}" />
 
         <Viewbox>
             <ContentControl Content="{Binding CurrentView}" />
         </Viewbox>
-
     </Grid>
 
     <Window.Style>
         <Style TargetType="Window">
-            <Setter Property="Cursor" Value="{x:Static local:ChessCursors.WhiteCursor}" />
+            <Setter Property="Cursor" Value="{x:Static utils:ChessCursors.WhiteCursor}" />
+
             <Style.Triggers>
-                <DataTrigger Binding="{Binding CurrentPlayerSide}" Value="{x:Static local:Player.White}">
-                    <Setter Property="Cursor" Value="{x:Static local:ChessCursors.WhiteCursor}" />
+                <DataTrigger Binding="{Binding CurrentPlayerSide}" Value="{x:Static enums:Player.White}">
+                    <Setter Property="Cursor" Value="{x:Static utils:ChessCursors.WhiteCursor}" />
                 </DataTrigger>
 
-                <DataTrigger Binding="{Binding CurrentPlayerSide}" Value="{x:Static local:Player.Black}">
-                    <Setter Property="Cursor" Value="{x:Static local:ChessCursors.BlackCursor}" />
+                <DataTrigger Binding="{Binding CurrentPlayerSide}" Value="{x:Static enums:Player.Black}">
+                    <Setter Property="Cursor" Value="{x:Static utils:ChessCursors.BlackCursor}" />
                 </DataTrigger>
             </Style.Triggers>
         </Style>

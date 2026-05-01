@@ -1,9 +1,13 @@
-﻿using ChessGame.Extensions;
-using ChessGame.Model;
-using ChessGame.Services;
-using ChessGame.Services.Interfaces;
+﻿using ChessApplication;
+using ChessApplication.DTO;
+using ChessApplication.Interfaces.Utils;
+using ChessGame.Utils;
 using ChessGame.ViewModel;
+using ChessGame.ViewModel.UserControlViewModels;
+using ChessInfrastructure;
+using ChessLibrary;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using System.Windows;
 
 namespace ChessGame
@@ -16,12 +20,20 @@ namespace ChessGame
         {
             var services = new ServiceCollection();
 
-            services.AddAppServices();
-            services.AddFactories();
-            services.AddMoveStrategies();
-            services.AddEndGameRules();
-            services.AddMessageHandlers();
-            services.AddViewModels();
+            services.AddChessDomain();
+
+            services.AddChessInfrastructure();
+
+            services.AddChessApplication();
+
+            services.AddChessPresentation();
+
+            services.AddLogging(builder =>
+            {
+                builder.ClearProviders();
+                builder.AddDebug();
+                builder.SetMinimumLevel(LogLevel.Debug);
+            });
 
             ServiceProvider = services.BuildServiceProvider();
         }
@@ -36,16 +48,14 @@ namespace ChessGame
             var mainWindow = new MainWindow();
             ApplySettings(mainWindow, settings);
 
-            var mainVM = ServiceProvider.GetRequiredService<MainViewModel>();
-            mainWindow.DataContext = mainVM;
-
+            mainWindow.DataContext = ServiceProvider.GetRequiredService<MainViewModel>();
             mainWindow.Show();
 
-            var nav = ServiceProvider.GetRequiredService<INavigationService>();
-            nav.NavigateTo<MenuViewModel>();
+            ServiceProvider.GetRequiredService<INavigationService>()
+                           .NavigateTo<MenuViewModel>();
         }
 
-        private void ApplySettings(Window window, SettingsData settings)
+        private static void ApplySettings(Window window, SettingsData settings)
         {
             if (settings.IsFullScreen)
             {

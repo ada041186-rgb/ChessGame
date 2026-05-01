@@ -1,13 +1,12 @@
-﻿using ChessGame.Model;
-using System;
-using System.Collections.Generic;
+﻿using ChessGame.Utils;
+using ChessGame.ViewModel.Base;
+using ChessGame.ViewModel.Game.Cell;
+using ChessLibrary.Board;
+using ChessLibrary.Pieces;
+using ChessLibrary.ValueObjects;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Media;
 
-namespace ChessGame.ViewModel.Game
+namespace ChessGame.ViewModel.Game.Cells
 {
     public class CellsViewModel : BaseViewModel
     {

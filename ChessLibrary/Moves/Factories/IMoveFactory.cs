@@ -1,5 +1,4 @@
 ﻿using ChessLibrary.Enums;
-using ChessLibrary.Moves;
 using ChessLibrary.ValueObjects;
 
 namespace ChessLibrary.Moves.Factories

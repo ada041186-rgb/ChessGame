@@ -1,5 +1,4 @@
 ﻿using ChessLibrary.Enums;
-using ChessLibrary.Game;
 
 namespace ChessLibrary.Game.Factories
 {

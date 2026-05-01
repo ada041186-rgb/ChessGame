@@ -1,24 +1,20 @@
-﻿using ChessGame.Commands;
-using ChessGame.Model;
-using ChessGame.Model.Moves;
-using ChessGame.Services.Implementations;
-using ChessGame.Services.Interfaces;
-using ChessGame.Services.Interfaces.Factories;
-using ChessGame.ViewModel.Game;
-using Microsoft.Extensions.DependencyInjection;
-using System;
-using System.Collections.Generic;
-using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Text.Json;
-using System.Threading.Tasks;
+﻿using ChessApplication.Interfaces.Game;
+using ChessApplication.Interfaces.Network;
+using ChessGame.Commands;
+using ChessGame.Factories.ViewModelsFactories;
+using ChessGame.Utils;
+using ChessGame.ViewModel.Base;
+using ChessGame.ViewModel.Game.Cells;
+using ChessGame.ViewModel.UserControlViewModels;
+using ChessLibrary.Enums;
+using ChessLibrary.Game;
+using ChessLibrary.Moves;
+using ChessLibrary.Moves.PawnMoves;
+using ChessLibrary.ValueObjects;
 using System.Windows;
-using System.Windows.Controls;
 using System.Windows.Input;
-using System.Windows.Media;
 
-namespace ChessGame.ViewModel
+namespace ChessGame.ViewModel.Game
 {
     public class GameViewModel : BaseViewModel, IDisposable
     {
@@ -80,7 +76,7 @@ namespace ChessGame.ViewModel
         }
         public ICommand LeaveGameCommand { get; }
         public ICommand CellClickCommand { get; }
-        public GameViewModel(IGameService gameService, INetworkService networkService, 
+        public GameViewModel(IGameService gameService, INetworkService networkService,
             INavigationService navigationService, IDtoMoveFactory dtoMoveFactory, IViewModelFactory<GameResult> gameResultFactory)
         {
             _gameService = gameService;
@@ -145,7 +141,7 @@ namespace ChessGame.ViewModel
         {
             CellsViewModel = new CellsViewModel();
             HighlightsViewModel = new HighlightsViewModel();
-            
+
             CellsViewModel.InitializeCells();
             HighlightsViewModel.InitializeHighlights();
         }
@@ -220,7 +216,7 @@ namespace ChessGame.ViewModel
         private void UpdateTurnStatus()
         {
             var currentPlayer = _gameService.CurrentPlayer;
-            TurnStatus = (currentPlayer == Player.White) ? "Хід Білих" : "Хід Чорних";
+            TurnStatus = currentPlayer == Player.White ? "Хід Білих" : "Хід Чорних";
         }
         public void Dispose()
         {

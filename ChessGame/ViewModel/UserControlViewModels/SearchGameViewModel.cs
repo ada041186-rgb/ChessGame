@@ -1,15 +1,15 @@
-﻿using ChessGame.Commands;
-using ChessGame.Model;
-using ChessGame.Model.Data;
-using ChessGame.Services.Implementations;
-using ChessGame.Services.Interfaces;
-using ChessGame.Services.Interfaces.Factories;
+﻿using ChessApplication.DTO;
+using ChessApplication.Interfaces.Utils;
+using ChessGame.Commands;
+using ChessGame.Factories.ViewModelsFactories;
+using ChessGame.Utils;
+using ChessGame.ViewModel.Base;
 using System.Windows;
 using System.Windows.Input;
 
-namespace ChessGame.ViewModel
+namespace ChessGame.ViewModel.UserControlViewModels
 {
-    public class SearchGameViewModel : BaseViewModel
+    public class SearchGameViewModel : BaseViewModel, IDisposable
     {
         private readonly INavigationService _navigation;
         private readonly IViewModelFactory<LobbyParams> _lobbyFactory;
@@ -31,9 +31,9 @@ namespace ChessGame.ViewModel
         public ICommand MenuCommand { get; }
 
         public SearchGameViewModel(
-            INavigationService navigation,
-            IViewModelFactory<LobbyParams> lobbyFactory,
-            ILobbyService lobbyService)
+                INavigationService navigation,
+                IViewModelFactory<LobbyParams> lobbyFactory,
+                ILobbyService lobbyService)
         {
             _navigation = navigation;
             _lobbyFactory = lobbyFactory;
@@ -41,34 +41,43 @@ namespace ChessGame.ViewModel
 
             JoinCommand = new AsyncRelayCommand(JoinGame);
             MenuCommand = new RelayCommand(ReturnToMenu);
+
+            _lobbyService.IsConnected += OnConnectionFinished;
         }
 
         private async Task JoinGame()
         {
-            if (string.IsNullOrWhiteSpace(IpAddress))
-            {
-                MessageBox.Show("Будь ласка, введіть IP адресу хоста.");
-                return;
-            }
+            if (string.IsNullOrWhiteSpace(IpAddress)) return;
 
             var param = new LobbyParams(isHost: false, IpAddress);
 
-            var connected = await _lobbyService.InitializeAsync(param);
+            await _lobbyService.InitializeAsync(param);
+        }
 
-            if (!connected)
+        private void OnConnectionFinished(bool success)
+        {
+            if (success)
             {
-                MessageBox.Show("Не вдалося підключитися до хоста.");
-                return;
+                var param = new LobbyParams(isHost: false, IpAddress);
+                var lobbyVM = _lobbyFactory.CreateViewModelWithParams(param);
+
+                _navigation.NavigateTo(lobbyVM);
             }
+            else
+            {
+                MessageBox.Show("Не вдалося підключитися.");
+            }
+        }
 
-            var lobbyVM = _lobbyFactory.CreateViewModelWithParams(param);
-
-            _navigation.NavigateTo(lobbyVM);
+        public void Dispose()
+        {
+            _lobbyService.IsConnected -= OnConnectionFinished;
         }
 
         private void ReturnToMenu(object parameter)
         {
             _navigation.NavigateTo<MenuViewModel>();
+
         }
     }
 }
