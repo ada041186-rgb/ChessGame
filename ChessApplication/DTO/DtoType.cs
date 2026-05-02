@@ -8,7 +8,7 @@
         PromotionMove,
         EnPassant,
         EndGame,
-        StartGame
-
+        StartGame,
+        Resign
     }
 }

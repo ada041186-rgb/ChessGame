@@ -17,6 +17,7 @@ namespace ChessApplication.Interfaces.Game
         event Action<GameResult> GameOver;
 
         void InitGame(Player player);
+        void ForceEndGame(GameResult result);
         bool TryMakeMove(Move move);
         IEnumerable<Move> GetLegalMoves(Position pos);
         bool IsCurrentPlayer();

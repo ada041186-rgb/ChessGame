@@ -6,6 +6,7 @@
         Stalemate,
         ThreefoldRepetition,
         FiftyMoveRule,
-        InsufficientMaterial
+        InsufficientMaterial,
+        Resign
     }
 }

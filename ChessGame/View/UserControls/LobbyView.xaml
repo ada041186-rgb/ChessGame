@@ -28,6 +28,7 @@
             <Button Grid.Column="1"
                     Grid.Row="1"
                     Command="{Binding StartGameCommand}"
+                    IsEnabled="{Binding CanStartGame}"
                     Content="Почати">
                 <Button.Style>
                     <Style TargetType="Button" BasedOn="{StaticResource ButtonStyle}">

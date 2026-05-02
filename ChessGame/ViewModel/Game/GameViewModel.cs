@@ -1,4 +1,6 @@
-﻿using ChessApplication.Interfaces.Game;
+﻿using ChessApplication.DTO;
+using ChessApplication.DTO.Messages;
+using ChessApplication.Interfaces.Game;
 using ChessApplication.Interfaces.Network;
 using ChessGame.Commands;
 using ChessGame.Factories.ViewModelsFactories;
@@ -88,7 +90,7 @@ namespace ChessGame.ViewModel.Game
             InitializeBoard();
 
             CellClickCommand = new RelayCommand(OnCellClick);
-            LeaveGameCommand = new RelayCommand(OnLeaveGame);
+            LeaveGameCommand = new AsyncRelayCommand(OnLeaveGame);
 
             _gameService.BoardChanged += OnBoardUpdated;
             _gameService.MoveExecuted += OnMoveExecuted;
@@ -206,13 +208,13 @@ namespace ChessGame.ViewModel.Game
                 }
             }
         }
-        private void OnLeaveGame(object obj)
+        private async Task OnLeaveGame()
         {
-            //_networkService.SendAsync("Resign", new { Player = _gameService.ThisPlayer });
+            await _networkService.SendAsync(DtoType.Resign, new DtoResign());
+            await _networkService.DisconnectAsync();
 
             _navigationService.NavigateTo<MenuViewModel>();
         }
-
         private void UpdateTurnStatus()
         {
             var currentPlayer = _gameService.CurrentPlayer;

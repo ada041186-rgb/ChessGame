@@ -120,16 +120,19 @@ public class TcpNetworkService : INetworkService, INetworkContext
             DtoType = type,
             Payload = JsonSerializer.SerializeToElement(message, message.GetType())
         };
-        _logger.LogInformation("DISPATCH → {Type}", message.GetType().Name);
 
         var json = JsonSerializer.Serialize(envelope);
-
-        _logger.LogInformation("SEND → {Type} | Size={Size}", type, json.Length);
 
         await _writeLock.WaitAsync();
         try
         {
             await _writer.WriteLineAsync(json);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Send failed → disconnecting");
+
+            await DisconnectInternal();
         }
         finally
         {
@@ -139,10 +142,10 @@ public class TcpNetworkService : INetworkService, INetworkContext
 
     public async Task DisconnectInternal()
     {
-        if (_state is DisconnectingState)
+        if (_state is DisconnectedState || _state is DisconnectingState)
             return;
 
-        this.SetState(new DisconnectingState(this));
+        SetState(new DisconnectingState(this));
 
         try { _cts?.Cancel(); } catch { }
         try { _client?.Close(); } catch { }
@@ -154,9 +157,11 @@ public class TcpNetworkService : INetworkService, INetworkContext
 
         _reader = null;
         _writer = null;
-        _listener?.Stop();
+
+        try { _listener?.Stop(); } catch { }
 
         OnDisconnected?.Invoke();
+
         SetState(new DisconnectedState(this));
         _logger.LogInformation("Disconnected");
     }
@@ -176,12 +181,13 @@ public class TcpNetworkService : INetworkService, INetworkContext
     private void StartListening()
     {
         _cts = new CancellationTokenSource();
+        var localCts = _cts;
 
         _listenTask = Task.Run(async () =>
         {
             try
             {
-                while (!_cts.IsCancellationRequested)
+                while (!localCts.IsCancellationRequested)
                 {
                     var raw = await _reader.ReadLineAsync();
                     if (raw == null) break;
@@ -203,7 +209,13 @@ public class TcpNetworkService : INetworkService, INetworkContext
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Listen error");
-                await DisconnectInternal();
+            }
+            finally
+            {
+                if (localCts == _cts)
+                {
+                    await DisconnectInternal();
+                }
             }
         });
     }

@@ -52,6 +52,7 @@ namespace ChessInfrastructure
             services.AddTransient<IMessageHandler<DtoEnPassantMove>, DtoEnPassantMoveHandler>();
             services.AddTransient<IMessageHandler<DtoPromotionMove>, PromotionMoveHandler>();
             services.AddTransient<IMessageHandler<DtoStartGame>, StartGameHandler>();
+            services.AddTransient<IMessageHandler<DtoResign>, ResignHandler>();
 
             return services;
         }

@@ -40,6 +40,7 @@ namespace ChessApplication.Services.Game
 
         public void InitGame(Player player)
         {
+            _history.Clear();
             _state = _stateFactory.Create(player);
             RaiseEvents();
         }
@@ -85,6 +86,15 @@ namespace ChessApplication.Services.Game
                 _history.GetHistory()
             );
 
+            if (result != null)
+            {
+                _history.Clear();
+                GameOver?.Invoke(result);
+            }
+        }
+
+        public void ForceEndGame(GameResult result)
+        {
             if (result != null)
             {
                 _history.Clear();

@@ -24,11 +24,50 @@ namespace ChessApplication.Services.Utils
         {
             _networkService = networkService;
             _gameService = gameService;
+
+            _networkService.OnDisconnected += HandleDisconnected;
         }
 
-        public void HandleLocalStartGame(DtoStartGame message)
+        private void HandleDisconnected()
         {
-            InitializeLocalGame(message.StartingSide);
+            _initialized = false;
+            IsConnected?.Invoke(false);
+        }
+
+        public async Task<bool> InitializeAsync(LobbyParams lobbyParams)
+        {
+            bool isHost = lobbyParams.IsHost;
+            string ip = lobbyParams.IpAdress;
+
+            await _initLock.WaitAsync();
+            try
+            {
+                if (_initialized)
+                    return true;
+
+                bool success;
+
+                if (isHost)
+                {
+                    success = await _networkService.StartServerAsync(PORT);
+                }
+                else
+                {
+                    if (string.IsNullOrWhiteSpace(ip))
+                        return false;
+
+                    success = await _networkService.ConnectAsync(ip, PORT);
+                }
+
+                _initialized = success;
+
+                IsConnected?.Invoke(success);
+                return success;
+            }
+            finally
+            {
+                _initLock.Release();
+            }
         }
 
         public async Task StartLanGameAsync(Player hostPlayer)
@@ -43,53 +82,25 @@ namespace ChessApplication.Services.Utils
             InitializeLocalGame(hostPlayer);
         }
 
+        public void HandleLocalStartGame(DtoStartGame message)
+        {
+            InitializeLocalGame(message.StartingSide);
+        }
+
         private void InitializeLocalGame(Player player)
         {
             _gameService.InitGame(player);
             GameStarted?.Invoke(player);
         }
 
-        public async Task<bool> InitializeAsync(LobbyParams lobbyParams)
+        public async Task DisconnectAsync()
         {
-            bool isHost = lobbyParams.IsHost;
-            string ip = lobbyParams.IpAdress;
-            bool success;
-
-            await _initLock.WaitAsync();
-            try
-            {
-                if (_initialized)
-                    return true;
-
-                if (isHost)
-                    success = await _networkService.StartServerAsync(PORT);
-                else
-                {
-                    if (string.IsNullOrWhiteSpace(ip))
-                        return false;
-
-                    success = await _networkService.ConnectAsync(ip, PORT);
-                }
-
-                _initialized = success;
-            }
-            finally
-            {
-                _initLock.Release();
-            }
-
-            IsConnected?.Invoke(success);
-
-            return success;
+            await _networkService.DisconnectAsync();
+            _initialized = false;
         }
 
         public void Reset()
         {
-            _initialized = false;
-        }
-        public async Task DisconnectAsync()
-        {
-            await _networkService.DisconnectAsync();
             _initialized = false;
         }
     }

@@ -31,7 +31,6 @@ namespace ChessInfrastructure.NetworkStates.States
         public async Task DisconnectAsync()
         {
             await _ctx.DisconnectInternal();
-            _ctx.SetState(new DisconnectedState(_ctx));
         }
     }
 }
