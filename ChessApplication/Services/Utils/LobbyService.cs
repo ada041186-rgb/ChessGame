@@ -87,5 +87,10 @@ namespace ChessApplication.Services.Utils
         {
             _initialized = false;
         }
+        public async Task DisconnectAsync()
+        {
+            await _networkService.DisconnectAsync();
+            _initialized = false;
+        }
     }
 }

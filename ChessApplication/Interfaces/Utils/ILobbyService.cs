@@ -9,8 +9,9 @@ namespace ChessApplication.Interfaces.Utils
         event Action<bool> IsConnected;
         event Action<Player> GameStarted;
         Task<bool> InitializeAsync(LobbyParams lobbyParams);
-        void Reset();
         void HandleLocalStartGame(DtoStartGame message);
         Task StartLanGameAsync(Player player);
+        void Reset();
+        Task DisconnectAsync();
     }
 }

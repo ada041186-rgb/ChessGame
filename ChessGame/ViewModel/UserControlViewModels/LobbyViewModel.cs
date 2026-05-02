@@ -36,6 +36,7 @@ namespace ChessGame.ViewModel.UserControlViewModels
 
         public bool CanStartGame => IsHost && IsOtherPlayerConnected;
         public ICommand StartGameCommand { get; }
+        public ICommand ExitToMenuCommand { get; }
 
         public LobbyViewModel(ILobbyService lobbyService, INavigationService navigation)
         {
@@ -49,6 +50,7 @@ namespace ChessGame.ViewModel.UserControlViewModels
                 StartGameAsync,
                 () => CanStartGame
             );
+            ExitToMenuCommand = new AsyncRelayCommand(ExitToMenuAsync);
         }
         private void OnGameStarted(Player player)
         {
@@ -80,7 +82,13 @@ namespace ChessGame.ViewModel.UserControlViewModels
 
             await _lobbyService.InitializeAsync(lobbyParams);
         }
+        private async Task ExitToMenuAsync()
+        {
+            await _lobbyService.DisconnectAsync();
+            _lobbyService.Reset();
 
+            _navigation.NavigateTo<MenuViewModel>();
+        }
         public void Dispose()
         {
             _lobbyService.IsConnected -= OnConnected;

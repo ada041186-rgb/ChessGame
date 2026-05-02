@@ -10,7 +10,7 @@
     <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="*"></RowDefinition>
-            <RowDefinition Height="*"></RowDefinition>
+            <RowDefinition Height="2*"></RowDefinition>
             <RowDefinition Height="*"></RowDefinition>
         </Grid.RowDefinitions>
         <TextBlock Style="{StaticResource TextStyle}" FontSize="36" Text="{Binding HeaderText}"/>
@@ -22,8 +22,8 @@
             </Grid.ColumnDefinitions>
             <Grid.RowDefinitions>
                 <RowDefinition Height="0.5*"></RowDefinition>
-                <RowDefinition></RowDefinition>
-                <RowDefinition Height="0.5*"></RowDefinition>
+                <RowDefinition Height="1*"></RowDefinition>
+                <RowDefinition Height="1*"></RowDefinition>
             </Grid.RowDefinitions>
             <Button Grid.Column="1"
                     Grid.Row="1"
@@ -41,6 +41,15 @@
                 </Button.Style>
 
             </Button>
+            <Button Grid.Row="2"
+                    Grid.Column="1"
+                    HorizontalAlignment="Center"
+                    VerticalAlignment="Center"
+                    Width="160"
+                    Height="45"
+                    Command="{Binding ExitToMenuCommand}"
+                    Content="Вийти в меню"
+                    Style="{StaticResource ButtonStyle}"/>
         </Grid>
     </Grid>
 </UserControl>

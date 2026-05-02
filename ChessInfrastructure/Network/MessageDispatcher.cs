@@ -1,6 +1,5 @@
 ﻿using ChessApplication.DTO;
 using ChessApplication.Interfaces.Network;
-using static System.Net.Mime.MediaTypeNames;
 
 namespace ChessInfrastructure.Network
 {
@@ -25,15 +24,19 @@ namespace ChessInfrastructure.Network
                 throw new Exception($"No handler for {messageType.Name}");
 
             var method = handlerType.GetMethod("HandleAsync");
+            if (method == null)
+                throw new Exception($"HandleAsync not found for {messageType.Name}");
 
-            var tcs = new TaskCompletionSource();
+            var tcs = new TaskCompletionSource<bool>();
 
             _uiContext.Post(async _ =>
             {
                 try
                 {
-                    await (Task)method.Invoke(handler, new object[] { message })!;
-                    tcs.SetResult();
+                    var task = (Task)method.Invoke(handler, new object[] { message })!;
+                    await task.ConfigureAwait(true);
+
+                    tcs.SetResult(true);
                 }
                 catch (Exception ex)
                 {

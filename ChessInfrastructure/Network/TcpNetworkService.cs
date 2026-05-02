@@ -1,292 +1,211 @@
 ﻿using ChessApplication.DTO;
 using ChessApplication.Interfaces.Network;
+using ChessInfrastructure.NetworkStates.States;
 using Microsoft.Extensions.Logging;
 using System.Net;
 using System.Net.Sockets;
 using System.Text.Json;
 
-namespace ChessInfrastructure.Network
+public class TcpNetworkService : INetworkService, INetworkContext
 {
-    public class TcpNetworkService : INetworkService, IDisposable
+    private readonly IDtoResolver _resolver;
+    private readonly IMessageDispatcher _dispatcher;
+    private readonly ILogger<TcpNetworkService> _logger;
+
+    private INetworkState _state;
+
+    private TcpListener _listener;
+    private TcpClient _client;
+
+    private StreamReader _reader;
+    private StreamWriter _writer;
+
+    private CancellationTokenSource _cts;
+    private Task _listenTask;
+
+    private readonly SemaphoreSlim _writeLock = new(1, 1);
+
+    public event Action OnDisconnected;
+
+    public TcpNetworkService(
+        IDtoResolver resolver,
+        IMessageDispatcher dispatcher,
+        ILogger<TcpNetworkService> logger)
     {
-        private readonly IDtoResolver _resolver;
-        private readonly IMessageDispatcher _dispatcher;
-        private readonly ILogger<TcpNetworkService> _logger;
+        _resolver = resolver;
+        _dispatcher = dispatcher;
+        _logger = logger;
+        _state = new DisconnectedState(this);
+    }
 
-        private TcpListener _listener;
-        private TcpClient _client;
+    public void SetState(INetworkState newState)
+    {
+        _logger.LogInformation("STATE → {State}", newState.GetType().Name);
+        _state = newState;
+    }
 
-        private StreamReader _reader;
-        private StreamWriter _writer;
+    #region state delegations
 
-        private CancellationTokenSource _cts;
-        private Task _listenTask;
+    public Task<bool> StartServerAsync(int port)
+        => _state.StartServerAsync(port);
 
-        private volatile bool _isConnected = false;
-        private bool _disposed = false;
-        private int _disconnectNotified = 0;
+    public Task<bool> ConnectAsync(string ip, int port)
+        => _state.ConnectAsync(ip, port);
 
-        private readonly SemaphoreSlim _writeLock = new SemaphoreSlim(1, 1);
+    public Task SendAsync(DtoType type, IDtoMessage message)
+        => _state.SendAsync(type, message);
 
-        public event Action OnDisconnected;
+    public Task DisconnectAsync()
+        => _state.DisconnectAsync();
 
-        public TcpNetworkService(
-            IDtoResolver resolver,
-            IMessageDispatcher dispatcher,
-            ILogger<TcpNetworkService> logger)
+    public void Dispose()
+    {
+        _ = DisconnectAsync();
+    }
+    #endregion
+    
+    #region iternal implementations
+    public async Task<bool> StartServerInternal(int port)
+    {
+        try
         {
-            _resolver = resolver;
-            _dispatcher = dispatcher;
-            _logger = logger;
-        }
-
-
-        public async Task<bool> StartServerAsync(int port)
-        {
-            if (_disposed) return false;
-
-            try
-            {
-                _logger.LogInformation("Starting server on port {Port}", port);
-
-                _listener?.Stop();
-                _listener = new TcpListener(IPAddress.Any, port);
-                _listener.Start();
-
-                _client = await _listener.AcceptTcpClientAsync();
-
-                InitStreams();
-
-                if (!await HandshakeAsync(true))
-                    return false;
-
-                StartListening();
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Server start error");
-                return false;
-            }
-        }
-
-
-        public async Task<bool> ConnectAsync(string ip, int port)
-        {
-            if (_disposed) return false;
-
-            try
-            {
-                _client = new TcpClient();
-
-                var connectTask = _client.ConnectAsync(ip, port);
-                var timeoutTask = Task.Delay(5000);
-
-                if (await Task.WhenAny(connectTask, timeoutTask) == timeoutTask)
-                    return false;
-
-                await connectTask;
-
-                InitStreams();
-
-                if (!await HandshakeAsync(false))
-                    return false;
-
-                StartListening();
-                return true;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Connect error");
-                return false;
-            }
-        }
-
-
-        private async Task<bool> HandshakeAsync(bool isServer)
-        {
-            try
-            {
-                if (isServer)
-                {
-                    await SendRawAsync("HELLO_SERVER");
-                    var response = await _reader.ReadLineAsync();
-                    return response == "HELLO_CLIENT";
-                }
-                else
-                {
-                    var request = await _reader.ReadLineAsync();
-                    if (request != "HELLO_SERVER")
-                        return false;
-
-                    await SendRawAsync("HELLO_CLIENT");
-                    return true;
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Handshake error");
-                return false;
-            }
-        }
-
-
-        private void InitStreams()
-        {
-            var stream = _client.GetStream();
-            _reader = new StreamReader(stream);
-            _writer = new StreamWriter(stream) { AutoFlush = true };
-
-            _isConnected = true;
-            _disconnectNotified = 0;
-
-            _logger.LogInformation("Streams initialized");
-        }
-
-
-        private void StartListening()
-        {
-            _cts = new CancellationTokenSource();
-
-            _listenTask = Task.Run(async () =>
-            {
-                try
-                {
-                    while (!_cts.IsCancellationRequested && _isConnected)
-                    {
-                        var raw = await _reader.ReadLineAsync();
-
-                        if (raw == null)
-                        {
-                            await Task.Delay(50);
-
-                            if (!_isConnected)
-                                break;
-
-                            continue;
-                        }
-
-                        var msg = JsonSerializer.Deserialize<NetworkMessage>(raw);
-                        if (msg == null) continue;
-
-                        var dto = _resolver.Deserialize(msg);
-                        await _dispatcher.DispatchAsync(dto);
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Listen loop error");
-                    SafeDisconnect();
-                }
-            });
-        }
-
-
-        public async Task SendAsync(DtoType type, IDtoMessage message)
-        {
-            if (!_isConnected || _disposed) return;
-
-            var envelope = new NetworkMessage
-            {
-                DtoType = type,
-                Payload = JsonSerializer.SerializeToElement(message, message.GetType())
-            };
-
-            var json = JsonSerializer.Serialize(envelope);
-
-            _logger.LogInformation(
-                "SEND → {Type} | Size={Size} bytes | Payload={Payload}",
-                type,
-                json.Length,
-                json
-            );
-
-            await _writeLock.WaitAsync();
-            try
-            {
-                if (!_isConnected) return;
-                await _writer.WriteLineAsync(json);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Send failed");
-                SafeDisconnect();
-            }
-            finally
-            {
-                _writeLock.Release();
-            }
-        }
-
-        private async Task SendRawAsync(string msg)
-        {
-            if (_disposed) return;
-
-            await _writeLock.WaitAsync();
-            try
-            {
-                if (!_isConnected) return;
-                await _writer.WriteLineAsync(msg);
-            }
-            finally
-            {
-                _writeLock.Release();
-            }
-        }
-
-
-        private void SafeDisconnect()
-        {
-            if (Interlocked.Exchange(ref _disconnectNotified, 1) == 1)
-                return;
-
-            _isConnected = false;
-
-            try { _cts?.Cancel(); } catch { }
-            try { _client?.Close(); } catch { }
-
-            OnDisconnected?.Invoke();
-
-            _logger.LogInformation("Safe disconnect done");
-        }
-
-
-        public async Task DisconnectAsync()
-        {
-            if (_disposed) return;
-
-            SafeDisconnect();
-
-            if (_listenTask != null)
-            {
-                try { await _listenTask; }
-                catch { }
-            }
-
-            _reader = null;
-            _writer = null;
-
             _listener?.Stop();
+            _listener = new TcpListener(IPAddress.Any, port);
+            _listener.Start();
 
-            _logger.LogInformation("Disconnected (service still alive)");
+            _client = await _listener.AcceptTcpClientAsync();
+
+            InitStreams();
+
+            StartListening();
+            return true;
         }
-
-        public void Dispose()
+        catch (Exception ex)
         {
-            if (_disposed) return;
-            _disposed = true;
-
-            try { _cts?.Cancel(); } catch { }
-
-            try { _reader?.Dispose(); } catch { }
-            try { _writer?.Dispose(); } catch { }
-
-            try { _writeLock?.Dispose(); } catch { }
-
-            try { _client?.Dispose(); } catch { }
-            try { _listener?.Stop(); } catch { }
-
-            _logger.LogInformation("TcpNetworkService disposed");
+            _logger.LogError(ex, "Server start error");
+            return false;
         }
     }
+
+    public async Task<bool> ConnectInternal(string ip, int port)
+    {
+        try
+        {
+            _client = new TcpClient();
+
+            var connectTask = _client.ConnectAsync(ip, port);
+            var timeoutTask = Task.Delay(5000);
+
+            if (await Task.WhenAny(connectTask, timeoutTask) == timeoutTask)
+                return false;
+
+            await connectTask;
+
+            InitStreams();
+            StartListening();
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Connect error");
+            return false;
+        }
+    }
+
+    public async Task SendInternal(DtoType type, IDtoMessage message)
+    {
+        var envelope = new NetworkMessage
+        {
+            DtoType = type,
+            Payload = JsonSerializer.SerializeToElement(message, message.GetType())
+        };
+        _logger.LogInformation("DISPATCH → {Type}", message.GetType().Name);
+
+        var json = JsonSerializer.Serialize(envelope);
+
+        _logger.LogInformation("SEND → {Type} | Size={Size}", type, json.Length);
+
+        await _writeLock.WaitAsync();
+        try
+        {
+            await _writer.WriteLineAsync(json);
+        }
+        finally
+        {
+            _writeLock.Release();
+        }
+    }
+
+    public async Task DisconnectInternal()
+    {
+        if (_state is DisconnectingState)
+            return;
+
+        this.SetState(new DisconnectingState(this));
+
+        try { _cts?.Cancel(); } catch { }
+        try { _client?.Close(); } catch { }
+
+        if (_listenTask != null)
+        {
+            try { await _listenTask; } catch { }
+        }
+
+        _reader = null;
+        _writer = null;
+        _listener?.Stop();
+
+        OnDisconnected?.Invoke();
+        SetState(new DisconnectedState(this));
+        _logger.LogInformation("Disconnected");
+    }
+
+    #endregion
+
+    #region Server message envelope
+    private void InitStreams()
+    {
+        var stream = _client.GetStream();
+        _reader = new StreamReader(stream);
+        _writer = new StreamWriter(stream) { AutoFlush = true };
+
+        _logger.LogInformation("Streams initialized");
+    }
+
+    private void StartListening()
+    {
+        _cts = new CancellationTokenSource();
+
+        _listenTask = Task.Run(async () =>
+        {
+            try
+            {
+                while (!_cts.IsCancellationRequested)
+                {
+                    var raw = await _reader.ReadLineAsync();
+                    if (raw == null) break;
+
+                    _logger.LogInformation("RECV → {Raw}", raw);
+
+                    try
+                    {
+                        var envelope = JsonSerializer.Deserialize<NetworkMessage>(raw);
+                        var message = _resolver.Deserialize(envelope);
+                        await _dispatcher.DispatchAsync(message);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Failed to process message");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Listen error");
+                await DisconnectInternal();
+            }
+        });
+    }
+    #endregion
 }
