@@ -4,16 +4,19 @@ using ChessLibrary.Game;
 
 namespace ChessLibrary.Rules.GameEnd
 {
-    public class RepetitionRule : IEndGameRule
+    public class RepetitionRule : EndGameRuleHandler
     {
-        public GameResult? Check(IBoard board, Player nextPlayer, IEnumerable<GameStateMemento> history)
+        public override GameResult? Check(
+            IBoard board,
+            Player nextPlayer,
+            IEnumerable<GameStateMemento> history)
         {
             if (IsDrawByRepetition(history))
             {
                 return new GameResult(Player.None, EndGameTypes.ThreefoldRepetition);
             }
 
-            return null;
+            return base.Check(board, nextPlayer, history);
         }
 
         private bool IsDrawByRepetition(IEnumerable<GameStateMemento> history)

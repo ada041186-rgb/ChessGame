@@ -5,16 +5,16 @@ using ChessLibrary.ValueObjects;
 
 namespace ChessLibrary.Rules.GameEnd
 {
-    public class InsufficientMaterial : IEndGameRule
+    public class InsufficientMaterialRule : EndGameRuleHandler
     {
-        public GameResult? Check(IBoard board, Player nextPlayer, IEnumerable<GameStateMemento> history)
+        public override GameResult? Check(IBoard board, Player nextPlayer, IEnumerable<GameStateMemento> history)
         {
             if (IsDrawByInsufficientMaterial(board, history))
             {
                 return new GameResult(Player.None, EndGameTypes.InsufficientMaterial);
             }
 
-            return null;
+            return base.Check(board, nextPlayer, history);
         }
 
         private bool IsDrawByInsufficientMaterial(IBoard board, IEnumerable<GameStateMemento> history)

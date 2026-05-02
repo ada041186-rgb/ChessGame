@@ -6,6 +6,6 @@ namespace ChessLibrary.Rules
 {
     public interface IEndGameRulePipeline
     {
-        public GameResult Evaluate(IBoard board, Player nextPlayer, IEnumerable<GameStateMemento> history);
+        public GameResult? Evaluate(IBoard board, Player nextPlayer, IEnumerable<GameStateMemento> history);
     }
 }

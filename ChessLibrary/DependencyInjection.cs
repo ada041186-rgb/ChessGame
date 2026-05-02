@@ -75,10 +75,10 @@ namespace ChessLibrary
 
             services.AddSingleton<IEndGameRule, CheckmateRule>();
             services.AddSingleton<IEndGameRule, StalemateRule>();
-            services.AddSingleton<IEndGameRule, InsufficientMaterial>();
+            services.AddSingleton<IEndGameRule, InsufficientMaterialRule>();
             services.AddSingleton<IEndGameRule, RepetitionRule>();
 
-            services.AddSingleton<IEndGameRulePipeline, EndGameRulePipeline>();
+            services.AddSingleton<IEndGameRulePipeline, EndGameEvaluator>();
 
             return services;
         }
