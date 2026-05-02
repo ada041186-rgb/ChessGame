@@ -261,7 +261,7 @@ else if (_networkState == NetworkState.Disconnected)
 _networkState.SendAsync(type, message);
 ```
 
-```
+```csharp
 // Before
 switch (_state)
 {
