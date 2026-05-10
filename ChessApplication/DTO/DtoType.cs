@@ -9,6 +9,9 @@
         EnPassant,
         EndGame,
         StartGame,
-        Resign
+        Resign,
+        CastlingMoveKS,
+        CastlingMoveQS
+
     }
 }

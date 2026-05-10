@@ -80,7 +80,7 @@ namespace ChessLibrary.Rules.GameEnd
 
             return wBishopPos.SquareColor() == bBishopPos.SquareColor();
         }
-
+       
         private static Position FindPiece(IBoard board, Player color, PieceType type)
         {
             return board.PiecePositionsFor(color).First(pos => board[pos].Type == type);

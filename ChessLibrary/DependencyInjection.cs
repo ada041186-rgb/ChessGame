@@ -55,11 +55,12 @@ namespace ChessLibrary
             services.AddSingleton<IMoveStrategy, BishopMoveStrategy>();
             services.AddSingleton<IMoveStrategy, KingMoveStrategy>();
             services.AddSingleton<IMoveStrategy, KnightMoveStrategy>();
-
+            services.AddSingleton<IMoveStrategy, KingCastleStrategy>();
             services.AddSingleton<IMoveStrategy, PawnForwardStrategy>();
             services.AddSingleton<IMoveStrategy, PawnCaptureStrategy>();
             services.AddSingleton<IMoveStrategy, PawnDoubleStrategy>();
             services.AddSingleton<IMoveStrategy, PawnEnPassantStrategy>();
+            services.AddSingleton<IMoveStrategy, KingCastleStrategy>();
 
             services.AddSingleton<IMoveStrategy, QueenMoveStrategy>();
             services.AddSingleton<IMoveStrategy, RookMoveStrategy>();

@@ -39,6 +39,8 @@ namespace ChessInfrastructure
             services.AddSingleton<ISpecificDtoMoveFactory, DtoDoubleMoveFactory>();
             services.AddSingleton<ISpecificDtoMoveFactory, DtoEnPasssantMoveFactory>();
             services.AddSingleton<ISpecificDtoMoveFactory, DtoPromotionMoveFactory>();
+            services.AddSingleton<ISpecificDtoMoveFactory, DtoCastlingMoveFactoryKS>();
+            services.AddSingleton<ISpecificDtoMoveFactory, DtoCastlingMoveFactoryQS>();
 
             services.AddSingleton<IDtoMoveFactory, DtoMoveDispatcher>();
 
@@ -53,6 +55,8 @@ namespace ChessInfrastructure
             services.AddTransient<IMessageHandler<DtoPromotionMove>, PromotionMoveHandler>();
             services.AddTransient<IMessageHandler<DtoStartGame>, StartGameHandler>();
             services.AddTransient<IMessageHandler<DtoResign>, ResignHandler>();
+            services.AddTransient<IMessageHandler<DtoCastlingMoveKS>, DtoCastlingMoveHandlerKS>();
+            services.AddTransient<IMessageHandler<DtoCastlingMoveQS>, DtoCastlingMoveHandlerQS>();
 
             return services;
         }
